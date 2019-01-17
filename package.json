@@ -6,7 +6,8 @@
   "module": "./dist/index.mjs",
   "typings": "./dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "jest --watch",
+    "test-ci": "jest --coverage",
     "build": "rollup -c",
     "lint": "tslint -c tslint.json src/**/*.ts",
     "prepublish": "npm run build"
