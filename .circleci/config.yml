@@ -8,3 +8,4 @@ jobs:
       - checkout
       - run: npm install
       - run: npm run test-ci
+      - run: npx codecov

@@ -46,6 +46,7 @@
   ],
   "devDependencies": {
     "@types/jest": "23.3.12",
+    "codecov": "3.1.0",
     "jest": "23.6.0",
     "prettier": "1.15.3",
     "rollup": "1.1.0",
