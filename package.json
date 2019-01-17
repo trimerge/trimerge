@@ -10,7 +10,7 @@
     "test-ci": "jest --coverage",
     "build": "rollup -c",
     "lint": "tslint -c tslint.json src/**/*.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "rm -rf dist/ && npm run build"
   },
   "engines": {
     "node": ">=6"

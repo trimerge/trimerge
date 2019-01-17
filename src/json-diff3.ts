@@ -18,9 +18,6 @@ export interface Handler {
 export function getArrayItemKeyStringValue(item: JSONValue): string {
   return String(item);
 }
-export function getArrayItemKeyIndex(_item: JSONValue, index: number): string {
-  return String(index);
-}
 export function throwingMerge(
   _o: JSONValue,
   _a: JSONValue,
