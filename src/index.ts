@@ -1,2 +1,2 @@
-export { diff3 } from './json-diff3'
-export * from './json';
+export { diff3 } from './json-diff3';
+export { JSONObject, JSONArray, JSONLiteral, JSONValue } from './json';
