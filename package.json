@@ -1,0 +1,56 @@
+{
+  "name": "json-diff3",
+  "version": "1.0.0",
+  "description": "three way merge json structures",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.esm.js",
+  "typings": "./lib/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "build": "rollup -c",
+    "lint": "tslint -c tslint.json src/**/*.ts",
+    "prepublish": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcello3d/json-diff3.git"
+  },
+  "keywords": [
+    "json",
+    "three-way-merge",
+    "diff",
+    "diff3",
+    "merge"
+  ],
+  "author": {
+    "name": "Marcello Bastéa-Forte",
+    "email": "marcello@cellosoft.com"
+  },
+  "license": "Zlib",
+  "bugs": {
+    "url": "https://github.com/marcello3d/json-diff3/issues"
+  },
+  "homepage": "https://github.com/marcello3d/json-diff3#readme",
+  "dependencies": {
+    "fast-deep-equal": "2.0.1",
+    "node-diff3": "1.0.0"
+  },
+  "files": [
+    "./README.md",
+    "./bin/*",
+    "./dist/*",
+    "./src/*"
+  ],
+  "devDependencies": {
+    "@types/jest": "23.3.12",
+    "jest": "23.6.0",
+    "prettier": "1.15.3",
+    "rollup": "1.1.0",
+    "rollup-plugin-commonjs": "9.2.0",
+    "rollup-plugin-node-resolve": "4.0.0",
+    "rollup-plugin-typescript2": "0.19.0",
+    "tslint": "5.12.1",
+    "tslint-config-prettier": "1.17.0",
+    "typescript": "3.2.2"
+  }
+}
