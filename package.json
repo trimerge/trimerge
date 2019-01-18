@@ -40,9 +40,8 @@
     "node-diff3": "1.0.0"
   },
   "files": [
-    "./README.md",
-    "./dist/*",
-    "./src/*"
+    "dist/**/*",
+    "src/**/*"
   ],
   "devDependencies": {
     "@types/jest": "23.3.12",
