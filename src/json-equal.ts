@@ -7,7 +7,7 @@ const isArray = Array.isArray;
 const keyList = Object.keys;
 const hasProp = Object.prototype.hasOwnProperty;
 
-export default function equal(a: any, b: any) {
+export default function jsonEqual(a: any, b: any) {
   if (a === b) return true;
 
   if (a && b && typeof a === 'object' && typeof b === 'object') {
@@ -20,7 +20,7 @@ export default function equal(a: any, b: any) {
         return false;
       }
       for (let i = length; i-- !== 0; ) {
-        if (!equal(a[i], b[i])) {
+        if (!jsonEqual(a[i], b[i])) {
           return false;
         }
       }
@@ -46,7 +46,7 @@ export default function equal(a: any, b: any) {
 
     for (let i = aKeysLength; i-- !== 0; ) {
       const key = aKeys[i];
-      if (!equal(a[key], b[key])) {
+      if (!jsonEqual(a[key], b[key])) {
         return false;
       }
     }
