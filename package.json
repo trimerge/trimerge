@@ -36,7 +36,6 @@
   },
   "homepage": "https://github.com/marcello3d/json-diff3#readme",
   "dependencies": {
-    "fast-deep-equal": "2.0.1",
     "node-diff3": "1.0.0"
   },
   "files": [

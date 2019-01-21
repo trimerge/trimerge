@@ -1,4 +1,4 @@
-import deepEqual from 'fast-deep-equal';
+import deepEqual from './json-equal';
 import { diff3MergeIndices } from 'node-diff3';
 import { JSONArray, JSONObject, JSONValue } from './json';
 import { Index } from 'node-diff3';

@@ -44,6 +44,30 @@ describe('patch3', () => {
     expect(diff3(state1, state2, state3)).toEqual(state3);
   });
 
+  it('only change left side with undefined', () => {
+    const state1 = {
+      world: 2,
+    };
+    const state2 = undefined;
+    const state3 = {
+      hello: undefined,
+      world: 2,
+    };
+    expect(diff3(state1, state2, state3)).toEqual(state2);
+  });
+
+  it('only change right side with undefined', () => {
+    const state1 = {
+      world: 2,
+    };
+    const state2 = {
+      hello: undefined,
+      world: 2,
+    };
+    const state3 = undefined;
+    expect(diff3(state1, state2, state3)).toEqual(state3);
+  });
+
   it('change from both sides', () => {
     const state1 = {
       hello: 1,
