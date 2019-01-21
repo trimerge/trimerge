@@ -211,10 +211,13 @@ function diff3ObjectInternal(
       newObject[key] = a[key];
     } else {
       // Possible conflict
-      newObject[key] = diff3(orig[key], a[key], b[key], handler, [
+      const merged = diff3(orig[key], a[key], b[key], handler, [
         ...path,
         key,
       ]);
+      if (merged !== undefined) {
+        newObject[key] = merged;
+      }
       if (inB) {
         remainingBKeySet.delete(key);
       }
@@ -224,10 +227,13 @@ function diff3ObjectInternal(
   remainingBKeySet.forEach((key) => {
     const inOrig = origKeySet.has(key);
     if (inOrig) {
-      newObject[key] = diff3(orig[key], a[key], b[key], handler, [
+      const merged = diff3(orig[key], a[key], b[key], handler, [
         ...path,
         key,
       ]);
+      if (merged !== undefined) {
+        newObject[key] = merged;
+      }
     } else {
       // key is new in b
       newObject[key] = b[key];
