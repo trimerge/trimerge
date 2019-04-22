@@ -1,11 +1,9 @@
-import deepEqual from './json-equal';
-import { diff3MergeIndices } from 'node-diff3';
+import { diff3MergeIndices, Index } from 'node-diff3';
 import { JSONArray, JSONObject, JSONValue } from './json';
-import { Index } from 'node-diff3';
+import deepEqual from './json-equal';
+import { Path } from './path';
 import { type } from './type';
 
-export type PathKey = string | number;
-export type Path = PathKey[];
 export interface Handler {
   getArrayItemKey(item: JSONValue, index: number, arrayPath: Path): string;
   handleMerge(
@@ -27,19 +25,19 @@ export function throwingMerge(
   throw new Error(`Conflict at /${path.join('/')}`);
 }
 
+type MergeFn<T> = (orig: T, a: T, b: T, path: Path, merger: AnyMerge) => T;
+type AnyMerge = MergeFn<any>;
+
 export function diff3(
   orig: JSONValue,
   a: JSONValue,
   b: JSONValue,
-  {
-    getArrayItemKey = getArrayItemKeyStringValue,
-    handleMerge = throwingMerge,
-  }: Partial<Handler> = {},
   basePath: Path = [],
+  diffFn: Merger,
 ): JSONValue {
   if (deepEqual(a, b)) {
     // Merging to same thing
-    return b;
+    return a;
   }
   if (deepEqual(orig, a)) {
     // Only b changed
@@ -59,8 +57,8 @@ export function diff3(
         orig as JSONArray,
         a as JSONArray,
         b as JSONArray,
-        { getArrayItemKey, handleMerge },
         basePath,
+        merger,
       );
     }
     if (typea === 'object') {
@@ -68,12 +66,12 @@ export function diff3(
         orig as JSONObject,
         a as JSONObject,
         b as JSONObject,
-        { getArrayItemKey, handleMerge },
         basePath,
+        merger,
       );
     }
   }
-  return handleMerge(orig, a, b, basePath);
+  return merger(orig, a, b, basePath, merger);
 }
 
 function diff3Array(
@@ -211,10 +209,7 @@ function diff3ObjectInternal(
       newObject[key] = a[key];
     } else {
       // Possible conflict
-      const merged = diff3(orig[key], a[key], b[key], handler, [
-        ...path,
-        key,
-      ]);
+      const merged = diff3(orig[key], a[key], b[key], handler, [...path, key]);
       if (merged !== undefined) {
         newObject[key] = merged;
       }
@@ -227,10 +222,7 @@ function diff3ObjectInternal(
   remainingBKeySet.forEach((key) => {
     const inOrig = origKeySet.has(key);
     if (inOrig) {
-      const merged = diff3(orig[key], a[key], b[key], handler, [
-        ...path,
-        key,
-      ]);
+      const merged = diff3(orig[key], a[key], b[key], handler, [...path, key]);
       if (merged !== undefined) {
         newObject[key] = merged;
       }
