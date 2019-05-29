@@ -1,36 +1,18 @@
-import { diff3MergeIndices, Index } from 'node-diff3';
 import { JSONArray, JSONObject, JSONValue } from './json';
-import deepEqual from './json-equal';
 import { Path } from './path';
+import { diff3MergeIndices, Index } from 'node-diff3';
+import { CannotMerge } from './cannot-merge';
+import deepEqual from './json-equal';
 import { type } from './type';
+import { AnyMerge, MergeFn } from './trimerge';
 
 type ArrayKeyFn = (item: JSONValue, index: number, arrayPath: Path) => string;
-type MergeFn<T> = (orig: T, a: T, b: T, path: Path, mergeFn: AnyMerge) => T;
-type AnyMerge = MergeFn<any>;
 
-export function makeMerger(merger: AnyMerge) {
-  return (orig: any, left: any, right: any, basePath: Path = []) => {
-    return merger(orig, left, right, basePath, merger);
-  };
-}
-export class ConflictError extends Error {
-  constructor(
-    public readonly origValue: any,
-    public readonly leftValue: any,
-    public readonly rightValue: any,
-    public readonly path: Path,
-    message: string = 'conflict',
-  ) {
-    super(`${message} at ${path.join('/')}`);
-  }
-}
-export const jsonMerge = (getArrayItemKey: ArrayKeyFn) => (
+export function trimergeJsonDeepEqual(
   orig: JSONValue,
   left: JSONValue,
   right: JSONValue,
-  basePath: Path = [],
-  mergeFn: MergeFn<JSONValue>,
-): JSONValue => {
+): JSONValue | typeof CannotMerge {
   if (deepEqual(left, right)) {
     // Merging to same thing
     return left;
@@ -43,42 +25,48 @@ export const jsonMerge = (getArrayItemKey: ArrayKeyFn) => (
     // Only left changed
     return left;
   }
+  return CannotMerge;
+}
 
+function jsonSameType(
+  orig: JSONValue,
+  left: JSONValue,
+  right: JSONValue,
+): typeof orig | 'array' | 'null' | typeof CannotMerge {
   const typeo = type(orig);
   const typea = type(left);
   const typeb = type(right);
   if (typea !== typeb || typea !== typeo) {
-    throw new ConflictError(
-      orig,
-      left,
-      right,
-      basePath,
-      `mismatched types (${typeo}, ${typea}, ${typeb})`,
-    );
+    return CannotMerge;
   }
-  if (typea === 'array') {
-    return diff3Array(
+  return typea;
+}
+
+export function trimergeArrayCreator(
+  getArrayItemKey: ArrayKeyFn,
+): MergeFn<any> {
+  return (
+    orig: JSONValue[],
+    left: JSONValue[],
+    right: JSONValue[],
+    path: Path,
+    mergeFn: AnyMerge,
+  ): JSONValue[] | typeof CannotMerge => {
+    if (jsonSameType(orig, left, right) !== 'array') {
+      return CannotMerge;
+    }
+    return internalTrimergeArray(
       orig as JSONArray,
       left as JSONArray,
       right as JSONArray,
-      basePath,
+      path,
       mergeFn,
       getArrayItemKey,
     );
-  }
-  if (typea === 'object') {
-    return diff3Object(
-      orig as JSONObject,
-      left as JSONObject,
-      right as JSONObject,
-      basePath,
-      mergeFn,
-    );
-  }
-  throw new ConflictError(orig, left, right, basePath);
-};
+  };
+}
 
-function diff3Array(
+function internalTrimergeArray(
   orig: JSONValue[],
   a: JSONValue[],
   b: JSONValue[],
@@ -89,32 +77,38 @@ function diff3Array(
   const origMap: JSONObject = {};
   const aMap: JSONObject = {};
   const bMap: JSONObject = {};
-  const origKeys = orig.map((item, index) => {
-    const key = getArrayItemKey(item, index, path);
-    if (key in origMap) {
-      throw new Error(`Duplicate array key '${key}' at /${path}`);
-    }
-    origMap[key] = item;
-    return key;
-  });
-  const aKeys = a.map((item, index) => {
-    const key = getArrayItemKey(item, index, path);
-    if (key in aMap) {
-      throw new Error(`Duplicate array key '${key}' at /${path}`);
-    }
-    aMap[key] = item;
-    return key;
-  });
-  const bKeys = b.map((item, index) => {
-    const key = getArrayItemKey(item, index, path);
-    if (key in bMap) {
-      throw new Error(`Duplicate array key '${key}' at /${path}`);
-    }
-    bMap[key] = item;
-    return key;
-  });
+  const origKeys = orig.map(
+    (item, index): string => {
+      const key = getArrayItemKey(item, index, path);
+      if (key in origMap) {
+        throw new Error(`Duplicate array key '${key}' at /${path}`);
+      }
+      origMap[key] = item;
+      return key;
+    },
+  );
+  const aKeys = a.map(
+    (item, index): string => {
+      const key = getArrayItemKey(item, index, path);
+      if (key in aMap) {
+        throw new Error(`Duplicate array key '${key}' at /${path}`);
+      }
+      aMap[key] = item;
+      return key;
+    },
+  );
+  const bKeys = b.map(
+    (item, index): string => {
+      const key = getArrayItemKey(item, index, path);
+      if (key in bMap) {
+        throw new Error(`Duplicate array key '${key}' at /${path}`);
+      }
+      bMap[key] = item;
+      return key;
+    },
+  );
 
-  const obj = diff3ObjectInternal(
+  const obj = interalTrimergeJsonObject(
     origMap,
     aMap,
     bMap,
@@ -162,26 +156,29 @@ function diff3Array(
   return result;
 }
 
-function diff3Object(
+export function trimergeJsonObject(
   orig: JSONObject,
-  a: JSONObject,
-  b: JSONObject,
+  left: JSONObject,
+  right: JSONObject,
   path: Path,
   mergeFn: AnyMerge,
-): JSONObject {
-  return diff3ObjectInternal(
+): JSONObject | typeof CannotMerge {
+  if (jsonSameType(orig, left, right) !== 'object') {
+    return CannotMerge;
+  }
+  return interalTrimergeJsonObject(
     orig,
-    a,
-    b,
+    left,
+    right,
     Object.keys(orig),
-    Object.keys(a),
-    Object.keys(b),
+    Object.keys(left),
+    Object.keys(right),
     path,
     mergeFn,
   );
 }
 
-function diff3ObjectInternal(
+function interalTrimergeJsonObject(
   orig: JSONObject,
   left: JSONObject,
   right: JSONObject,
@@ -189,19 +186,19 @@ function diff3ObjectInternal(
   leftKeys: string[],
   rightKeys: string[],
   path: Path,
-  mergeFn: AnyMerge,
+  merge: AnyMerge,
 ): JSONObject {
   const newObject: JSONObject = {};
   const keys = new Set<string>(origKeys);
   leftKeys.forEach(keys.add, keys);
   rightKeys.forEach(keys.add, keys);
   keys.forEach((key) => {
-    const merged = mergeFn(
+    const merged = merge(
       orig[key],
       left[key],
       right[key],
       [...path, key],
-      mergeFn,
+      merge,
     );
     if (merged !== undefined) {
       newObject[key] = merged;
@@ -209,16 +206,3 @@ function diff3ObjectInternal(
   });
   return newObject;
 }
-
-// possibilities:
-// key in: a          --- use a
-// key in: b          --- use b
-// key in: a, b, orig --- if a === orig, use b,
-//                        if b === orig, use a,
-//                        else conflict
-// key in: a, orig    --- if a === orig, use none
-//                        else conflict
-// key in: b, orig    --- if b === orig, use none
-//                        else conflict
-// key in: a, b       --- conflict
-// key in: orig       --- use none

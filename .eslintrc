@@ -3,5 +3,10 @@
     "plugin:@typescript-eslint/recommended",
     "prettier",
     "prettier/@typescript-eslint"
-  ]
+  ],
+  "rules": {
+    "@typescript-eslint/no-use-before-define": false,
+    "@typescript-eslint/no-parameter-properties": false,
+    "@typescript-eslint/explicit-function-return-type": false
+  }
 }
