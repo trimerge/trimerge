@@ -1,4 +1,4 @@
-import { Path } from './path';
+import { Path, PathKey } from './path';
 import { CannotMerge } from './cannot-merge';
 import { AnyMerge } from './trimerge';
 
@@ -24,7 +24,7 @@ export function trimergeMap(
     return CannotMerge;
   }
   const newMap = new Map<any, any>();
-  const keys = new Set<string>(iterateKeys(orig, left, right));
+  const keys = new Set<PathKey>(iterateKeys(orig, left, right));
   keys.forEach((key) => {
     const merged = merge(
       orig.get(key),
