@@ -6,7 +6,7 @@ import deepEqual from './json-equal';
 import { type } from './type';
 import { AnyMerge, MergeFn, trimergeEqualityCreator } from './trimerge';
 
-type ArrayKeyFn = (item: JSONValue, index: number, arrayPath: Path) => string;
+type ArrayKeyFn = (item: any, index: number, arrayPath: Path) => string;
 
 export const trimergeJsonDeepEqual = trimergeEqualityCreator(deepEqual);
 

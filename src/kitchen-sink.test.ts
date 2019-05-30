@@ -1,6 +1,12 @@
-import { combineMergers, trimergeEquality } from './trimerge';
-import { trimergeArrayCreator, trimergeJsonObject } from './trimerge-json';
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { combineMergers } from './trimerge';
+import {
+  trimergeArrayCreator,
+  trimergeJsonDeepEqual,
+  trimergeJsonObject,
+} from './trimerge-json';
 import { trimergeString } from './trimerge-string';
+import { routeMergers } from './trimerge-router';
 
 describe('works with complex structure', () => {
   type ShapeEnum = 'ellipse' | 'rect';
@@ -28,10 +34,11 @@ describe('works with complex structure', () => {
   }
 
   const merger = combineMergers(
-    trimergeEquality,
-    trimergeString,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    trimergeArrayCreator((item: any) => item.key),
+    trimergeJsonDeepEqual,
+    routeMergers(
+      [['title'], trimergeString],
+      [['canvas', 'shapes'], trimergeArrayCreator((item: Shape) => item.key)],
+    ),
     trimergeJsonObject,
   );
 
@@ -59,6 +66,61 @@ describe('works with complex structure', () => {
     const s3: Model = { title: 'new title' };
     expect(merger(s1, s2, s3)).toEqual({
       title: 'new title is great',
+    });
+  });
+
+  describe('large model', () => {
+    const base: Model = {
+      title: 'original title',
+      canvas: {
+        width: 100,
+        height: 100,
+        shapes: [
+          {
+            key: '1',
+            type: 'ellipse',
+            x: 10,
+            y: 10,
+            w: 200,
+            h: 200,
+          },
+        ],
+      },
+    };
+    const fakeImmerProduce = <T>(o: T, recipe: (o: T) => void): T => {
+      const draft = JSON.parse(JSON.stringify(o));
+      recipe(draft);
+      return draft;
+    };
+
+    it('can add shapes', () => {
+      const s2AddedShape: Shape = {
+        key: '2',
+        type: 'rect',
+        x: 10,
+        y: 10,
+        w: 200,
+        h: 200,
+      };
+      const s3AddedShape: Shape = {
+        key: '3',
+        type: 'rect',
+        x: 10,
+        y: 10,
+        w: 200,
+        h: 200,
+      };
+
+      const s2 = fakeImmerProduce(base, (draft) => {
+        draft.canvas!.shapes.push(s2AddedShape);
+      });
+      const s3 = fakeImmerProduce(base, (draft) => {
+        draft.canvas!.shapes.push(s3AddedShape);
+      });
+      const result = fakeImmerProduce(base, (draft) => {
+        draft.canvas!.shapes.push(s2AddedShape, s3AddedShape);
+      });
+      expect(merger(base, s2, s3)).toEqual(result);
     });
   });
 });
