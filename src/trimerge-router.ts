@@ -14,7 +14,9 @@ export function routeMergers(...routes: Route[]): AnyMerge {
     merger?: AnyMerge;
   }
   type RouteMap = Map<RoutePathKey, RouteNode>;
-  const root: RouteNode = { keyMap: new Map() };
+  const root: RouteNode = {
+    keyMap: new Map(),
+  };
 
   function addRouter(
     node: RouteNode,
@@ -30,7 +32,9 @@ export function routeMergers(...routes: Route[]): AnyMerge {
       const [key, ...remainingPath] = currentPath;
       let subNode = node.keyMap.get(key);
       if (subNode === undefined) {
-        subNode = { keyMap: new Map() };
+        subNode = {
+          keyMap: new Map(),
+        };
         node.keyMap.set(key, subNode);
       }
       addRouter(subNode, remainingPath, merger);
