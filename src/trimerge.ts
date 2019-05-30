@@ -21,20 +21,14 @@ export function combineMergers(...mergers: AnyMerge[]): Merger {
         return result;
       }
     }
-    throw new ConflictError(orig, left, right, basePath);
+    throw new CannotMergeError(basePath);
   };
   return combinedMerger;
 }
 
-export class ConflictError extends Error {
-  public constructor(
-    public readonly origValue: any,
-    public readonly leftValue: any,
-    public readonly rightValue: any,
-    public readonly path: Path,
-    message: string = 'conflict',
-  ) {
-    super(`${message} at /${path.join('/')}`);
+export class CannotMergeError extends Error {
+  public constructor(path: Path) {
+    super(`cannot merge /${path.join('/')}`);
   }
 }
 

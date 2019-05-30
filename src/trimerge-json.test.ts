@@ -1,7 +1,7 @@
 import {
   AnyMerge,
   combineMergers,
-  ConflictError,
+  CannotMergeError,
   trimergeEquality,
 } from './trimerge';
 import { Path } from './path';
@@ -134,28 +134,28 @@ describe('trimergeJsonObject', () => {
     const s2 = {};
     const s3 = {};
     const merger = combineMergers(trimergeJsonObject);
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
   it('does not merge if not all objects 2', () => {
     const s1 = {};
     const s2 = false;
     const s3 = {};
     const merger = combineMergers(trimergeJsonObject);
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
   it('does not merge if not all objects 3', () => {
     const s1 = {};
     const s2 = {};
     const s3 = false;
     const merger = combineMergers(trimergeJsonObject);
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
   it('does not merge if none are objects', () => {
     const s1 = false;
     const s2 = false;
     const s3 = false;
     const merger = combineMergers(trimergeJsonObject);
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
 });
 
@@ -173,7 +173,7 @@ describe('arrays', () => {
     const s2 = false;
     const s3 = false;
     const merger = combineMergers(trimergeArrayCreator((item) => String(item)));
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
   it('handles array add', () => {
     const state1 = [1, 2, 3];

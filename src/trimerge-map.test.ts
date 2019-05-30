@@ -1,7 +1,7 @@
 import {
   AnyMerge,
   combineMergers,
-  ConflictError,
+  CannotMergeError,
   trimergeEquality,
 } from './trimerge';
 import { Path } from './path';
@@ -105,27 +105,27 @@ describe('trimergeJsonMap', () => {
     const s2 = new Map();
     const s3 = new Map();
     const merger = combineMergers(trimergeMap);
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
   it('does not merge if not all Maps 2 ', () => {
     const s1 = new Map();
     const s2 = false;
     const s3 = new Map();
     const merger = combineMergers(trimergeMap);
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
   it('does not merge if not all Maps 3', () => {
     const s1 = new Map();
     const s2 = new Map();
     const s3 = false;
     const merger = combineMergers(trimergeMap);
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
   it('does not merge if none are Maps', () => {
     const s1 = false;
     const s2 = false;
     const s3 = false;
     const merger = combineMergers(trimergeMap);
-    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
 });

@@ -50,15 +50,15 @@ export function trimergeArrayCreator(
 
 function internalTrimergeArray(
   orig: JSONValue[],
-  a: JSONValue[],
-  b: JSONValue[],
+  left: JSONValue[],
+  right: JSONValue[],
   path: Path,
   mergeFn: AnyMerge,
   getArrayItemKey: ArrayKeyFn,
 ): JSONValue[] {
   const origMap: JSONObject = {};
-  const aMap: JSONObject = {};
-  const bMap: JSONObject = {};
+  const leftMap: JSONObject = {};
+  const rightMap: JSONObject = {};
   const origKeys = orig.map(
     (item, index): string => {
       const key = getArrayItemKey(item, index, path);
@@ -69,60 +69,68 @@ function internalTrimergeArray(
       return key;
     },
   );
-  const aKeys = a.map(
+  const leftKeys = left.map(
     (item, index): string => {
       const key = getArrayItemKey(item, index, path);
-      if (key in aMap) {
+      if (key in leftMap) {
         throw new Error(`Duplicate array key '${key}' at /${path}`);
       }
-      aMap[key] = item;
+      leftMap[key] = item;
       return key;
     },
   );
-  const bKeys = b.map(
+  const rightKeys = right.map(
     (item, index): string => {
       const key = getArrayItemKey(item, index, path);
-      if (key in bMap) {
+      if (key in rightMap) {
         throw new Error(`Duplicate array key '${key}' at /${path}`);
       }
-      bMap[key] = item;
+      rightMap[key] = item;
       return key;
     },
   );
 
-  const obj = interalTrimergeJsonObject(
+  const obj = internalTrimergeJsonObject(
     origMap,
-    aMap,
-    bMap,
+    leftMap,
+    rightMap,
     origKeys,
-    aKeys,
-    bKeys,
+    leftKeys,
+    rightKeys,
     path,
     mergeFn,
   );
 
   const result: JSONValue[] = [];
-  const sides: string[][] = [aKeys, origKeys, bKeys];
-  const indices: Index[] = diff3MergeIndices(aKeys, origKeys, bKeys);
+  const sides: string[][] = [leftKeys, origKeys, rightKeys];
+  const indices: Index[] = diff3MergeIndices(leftKeys, origKeys, rightKeys);
   for (let i = 0; i < indices.length; i++) {
     const index: Index = indices[i];
     if (index[0] === -1) {
-      const [, aStart, aLength, oStart, oLength, bStart, bLength] = index;
-      const aEnd = aStart + aLength;
-      const bEnd = bStart + bLength;
-      const oEnd = oStart + oLength;
-      // const aSlice = new Set(aKeys.slice(aStart, aEnd));
-      const bSlice = new Set(bKeys.slice(bStart, bEnd));
-      const oSlice = new Set(origKeys.slice(oStart, oEnd));
-      for (let j = aStart; j < aEnd; j++) {
-        const key = aKeys[j];
-        if (bSlice.has(key) || !oSlice.has(key)) {
+      const [
+        ,
+        leftStart,
+        leftLength,
+        origStart,
+        origLength,
+        rightStart,
+        rightLength,
+      ] = index;
+      const origEnd = origStart + origLength;
+      const leftEnd = leftStart + leftLength;
+      const rightEnd = rightStart + rightLength;
+      // const leftSlice = new Set(leftKeys.slice(leftStart, leftEnd));
+      const rightSlice = new Set(rightKeys.slice(rightStart, rightEnd));
+      const origSlice = new Set(origKeys.slice(origStart, origEnd));
+      for (let j = leftStart; j < leftEnd; j++) {
+        const key = leftKeys[j];
+        if (rightSlice.has(key) || !origSlice.has(key)) {
           result.push(obj[key]);
         }
       }
-      for (let j = bStart; j < bEnd; j++) {
-        const key = bKeys[j];
-        if (!oSlice.has(key)) {
+      for (let j = rightStart; j < rightEnd; j++) {
+        const key = rightKeys[j];
+        if (!origSlice.has(key)) {
           result.push(obj[key]);
         }
       }
@@ -148,7 +156,7 @@ export function trimergeJsonObject(
   if (jsonSameType(orig, left, right) !== 'object') {
     return CannotMerge;
   }
-  return interalTrimergeJsonObject(
+  return internalTrimergeJsonObject(
     orig,
     left,
     right,
@@ -160,7 +168,7 @@ export function trimergeJsonObject(
   );
 }
 
-function interalTrimergeJsonObject(
+function internalTrimergeJsonObject(
   orig: JSONObject,
   left: JSONObject,
   right: JSONObject,
