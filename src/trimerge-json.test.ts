@@ -129,17 +129,24 @@ describe('trimergeJsonObject', () => {
     expect(merger(s1, s2, s3)).toEqual({ hello: 1, there: 2 });
     expect(paths).toEqual([[], ['hello'], ['world'], ['there']]);
   });
-  it('does not merge if not all objects', () => {
-    const s1 = {};
+  it('does not merge if not all objects 1', () => {
+    const s1 = false;
     const s2 = {};
-    const s3 = false;
+    const s3 = {};
     const merger = combineMergers(trimergeJsonObject);
     expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
   });
-  it('does not merge if not all objects', () => {
+  it('does not merge if not all objects 2', () => {
     const s1 = {};
     const s2 = false;
     const s3 = {};
+    const merger = combineMergers(trimergeJsonObject);
+    expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
+  });
+  it('does not merge if not all objects 3', () => {
+    const s1 = {};
+    const s2 = {};
+    const s3 = false;
     const merger = combineMergers(trimergeJsonObject);
     expect(() => merger(s1, s2, s3)).toThrowError(ConflictError);
   });

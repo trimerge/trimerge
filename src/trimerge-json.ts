@@ -4,29 +4,11 @@ import { diff3MergeIndices, Index } from 'node-diff3';
 import { CannotMerge } from './cannot-merge';
 import deepEqual from './json-equal';
 import { type } from './type';
-import { AnyMerge, MergeFn } from './trimerge';
+import { AnyMerge, MergeFn, trimergeEqualityCreator } from './trimerge';
 
 type ArrayKeyFn = (item: JSONValue, index: number, arrayPath: Path) => string;
 
-export function trimergeJsonDeepEqual(
-  orig: JSONValue,
-  left: JSONValue,
-  right: JSONValue,
-): JSONValue | typeof CannotMerge {
-  if (deepEqual(left, right)) {
-    // Merging to same thing
-    return left;
-  }
-  if (deepEqual(orig, left)) {
-    // Only right changed
-    return right;
-  }
-  if (deepEqual(orig, right)) {
-    // Only left changed
-    return left;
-  }
-  return CannotMerge;
-}
+export const trimergeJsonDeepEqual = trimergeEqualityCreator(deepEqual);
 
 function jsonSameType(
   orig: JSONValue,
