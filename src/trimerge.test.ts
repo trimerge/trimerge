@@ -53,7 +53,7 @@ describe('combineMergers()', () => {
     const merger1 = jest.fn(() => CannotMerge);
     const combinedMerge = combineMergers(merger1);
     expect(merger1.mock.calls).toHaveLength(0);
-    expect(() => combinedMerge(s1, s2, s3)).toThrow('conflict at /');
+    expect(() => combinedMerge(s1, s2, s3)).toThrow('cannot merge /');
     expect(merger1.mock.calls).toEqual([[s1, s2, s3, [], combinedMerge]]);
   });
 });
