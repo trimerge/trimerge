@@ -273,7 +273,7 @@ describe('arrays', () => {
     const state2 = [{ id: 'foo' }, { id: 'bar', value: 1 }];
     const state3 = [{ id: 'foo' }, { id: 'bar', value: 2 }];
     expect(() => idArrayMerge(state1, state2, state3)).toThrowError(
-      'conflict at /bar',
+      'cannot merge /bar',
     );
   });
   it('handles keyed object array with values', () => {
