@@ -1,15 +1,15 @@
 import {
-  AnyMerge,
-  combineMergers,
   CannotMergeError,
+  combineMergers,
+  MergeFn,
   trimergeEquality,
 } from './trimerge';
 import { Path } from './path';
 import { CannotMerge } from './cannot-merge';
 import { trimergeMap } from './trimerge-map';
 
-function mockPathTrackingMerger(paths: Path[]): AnyMerge {
-  return (_orig, _left, _right, path): typeof CannotMerge => {
+function mockPathTrackingMerger(paths: Path[]): MergeFn {
+  return (_orig, _left, _right, path = []): typeof CannotMerge => {
     paths.push(path);
     return CannotMerge;
   };

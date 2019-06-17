@@ -4,7 +4,7 @@ import { diff3MergeIndices, Index } from 'node-diff3';
 import { CannotMerge } from './cannot-merge';
 import deepEqual from './json-equal';
 import { type } from './type';
-import { AnyMerge, MergeFn, trimergeEqualityCreator } from './trimerge';
+import { MergeFn, trimergeEqualityCreator } from './trimerge';
 
 type ArrayKeyFn = (item: any, index: number, arrayPath: Path) => string;
 
@@ -24,15 +24,13 @@ function jsonSameType(
   return typea;
 }
 
-export function trimergeArrayCreator(
-  getArrayItemKey: ArrayKeyFn,
-): MergeFn<any> {
+export function trimergeArrayCreator(getArrayItemKey: ArrayKeyFn): MergeFn {
   return (
-    orig: JSONValue[],
-    left: JSONValue[],
-    right: JSONValue[],
+    orig: any,
+    left: any,
+    right: any,
     path: Path,
-    mergeFn: AnyMerge,
+    mergeFn: MergeFn,
   ): JSONValue[] | typeof CannotMerge => {
     if (jsonSameType(orig, left, right) !== 'array') {
       return CannotMerge;
@@ -53,7 +51,7 @@ function internalTrimergeArray(
   left: JSONValue[],
   right: JSONValue[],
   path: Path,
-  mergeFn: AnyMerge,
+  mergeFn: MergeFn,
   getArrayItemKey: ArrayKeyFn,
 ): JSONValue[] {
   const origMap: JSONObject = {};
@@ -147,11 +145,11 @@ function internalTrimergeArray(
 }
 
 export function trimergeJsonObject(
-  orig: JSONObject,
-  left: JSONObject,
-  right: JSONObject,
+  orig: any,
+  left: any,
+  right: any,
   path: Path,
-  mergeFn: AnyMerge,
+  mergeFn: MergeFn,
 ): JSONObject | typeof CannotMerge {
   if (jsonSameType(orig, left, right) !== 'object') {
     return CannotMerge;
@@ -176,7 +174,7 @@ function internalTrimergeJsonObject(
   leftKeys: string[],
   rightKeys: string[],
   path: Path,
-  merge: AnyMerge,
+  merge: MergeFn,
 ): JSONObject {
   const newObject: JSONObject = {};
   const keys = new Set<string>(origKeys);

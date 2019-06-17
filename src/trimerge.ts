@@ -1,21 +1,32 @@
 import { Path } from './path';
 import { CannotMerge } from './cannot-merge';
 
-export type MergeFn<T> = (
-  orig: T,
-  left: T,
-  right: T,
-  path: Path,
-  mergeFn: AnyMerge,
-) => T;
-export type AnyMerge = MergeFn<any>;
+export type MergeFn = (
+  orig: any,
+  left: any,
+  right: any,
+  basePath: Path,
+  mergeFn: MergeFn,
+) => any | typeof CannotMerge;
 
-export type Merger = (orig: any, left: any, right: any, basePath?: Path) => any;
+type RootMergeFn = (
+  orig: any,
+  left: any,
+  right: any,
+  basePath?: Path,
+  mergeFn?: MergeFn,
+) => any | typeof CannotMerge;
 
-export function combineMergers(...mergers: AnyMerge[]): Merger {
-  const combinedMerger: Merger = (orig, left, right, basePath = []): any => {
+export function combineMergers(...mergers: MergeFn[]): RootMergeFn {
+  const combinedMerger: RootMergeFn = (
+    orig,
+    left,
+    right,
+    basePath = [],
+    mergeFn = combinedMerger,
+  ): any => {
     for (const merger of mergers) {
-      const result = merger(orig, left, right, basePath, combinedMerger);
+      const result = merger(orig, left, right, basePath, mergeFn);
       if (result !== CannotMerge) {
         return result;
       }
@@ -35,7 +46,7 @@ export const trimergeEquality = trimergeEqualityCreator((a, b) => a === b);
 
 export function trimergeEqualityCreator(
   equal: (a: any, b: any) => boolean,
-): AnyMerge {
+): MergeFn {
   return (orig, left, right) => {
     if (equal(left, right)) {
       // Merging to same thing
