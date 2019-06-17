@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "description": "three way merge JSON and arbitrary structures",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.esm.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
     "test": "jest --watch",
