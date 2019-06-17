@@ -1,6 +1,6 @@
 import { Path, PathKey } from './path';
 import { CannotMerge } from './cannot-merge';
-import { AnyMerge } from './trimerge';
+import { MergeFn } from './trimerge';
 
 function* iterateKeys<K>(...maps: Map<K, any>[]): IterableIterator<K> {
   for (const map of maps) {
@@ -13,7 +13,7 @@ export function trimergeMap(
   left: any,
   right: any,
   path: Path,
-  merge: AnyMerge,
+  merge: MergeFn,
 ): Map<any, any> | typeof CannotMerge {
   if (
     !(orig instanceof Map) ||

@@ -7,6 +7,7 @@ export {
   trimergeEquality,
   trimergeEqualityCreator,
   CannotMergeError,
+  MergeFn,
 } from './trimerge';
 export {
   trimergeArrayCreator,

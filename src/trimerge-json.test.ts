@@ -1,7 +1,7 @@
 import {
-  AnyMerge,
-  combineMergers,
   CannotMergeError,
+  combineMergers,
+  MergeFn,
   trimergeEquality,
 } from './trimerge';
 import { Path } from './path';
@@ -38,8 +38,8 @@ describe('trimergeJsonDeepEqual', () => {
   });
 });
 
-function mockPathTrackingMerger(paths: Path[]): AnyMerge {
-  return (_orig, _left, _right, path): typeof CannotMerge => {
+function mockPathTrackingMerger(paths: Path[]): MergeFn {
+  return (_orig, _left, _right, path = []): typeof CannotMerge => {
     paths.push(path);
     return CannotMerge;
   };

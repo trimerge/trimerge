@@ -1,4 +1,4 @@
-import { AnyMerge } from './trimerge';
+import { MergeFn } from './trimerge';
 import { Path } from './path';
 import { CannotMerge } from './cannot-merge';
 
@@ -7,22 +7,18 @@ export const RouteWildCard = new RouteWildCardClass();
 export type RoutePathKey = string | number | typeof RouteWildCard;
 export type RoutePath = RoutePathKey[];
 
-type Route = [RoutePath, AnyMerge];
-export function routeMergers(...routes: Route[]): AnyMerge {
+type Route = [RoutePath, MergeFn];
+export function routeMergers(...routes: Route[]): MergeFn {
   interface RouteNode {
     keyMap: RouteMap;
-    merger?: AnyMerge;
+    merger?: MergeFn;
   }
   type RouteMap = Map<RoutePathKey, RouteNode>;
   const root: RouteNode = {
     keyMap: new Map(),
   };
 
-  function addRouter(
-    node: RouteNode,
-    currentPath: RoutePath,
-    merger: AnyMerge,
-  ) {
+  function addRouter(node: RouteNode, currentPath: RoutePath, merger: MergeFn) {
     if (currentPath.length === 0) {
       if (node.merger) {
         throw new Error('duplicate route');
@@ -44,7 +40,7 @@ export function routeMergers(...routes: Route[]): AnyMerge {
     addRouter(root, path, merger);
   }
 
-  return (orig: any, left: any, right: any, path: Path, mergeFn: AnyMerge) => {
+  return (orig: any, left: any, right: any, path: Path, mergeFn: MergeFn) => {
     let node: RouteNode = root;
     for (let i = 0; i < path.length; i++) {
       const childNode =
