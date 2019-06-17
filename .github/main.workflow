@@ -22,6 +22,7 @@ action "lint" {
 
 # Filter for a new tag
 action "version tag" {
+  needs = ["test", "lint"]
   uses = "actions/bin/filter@master"
   args = "tag v*"
 }
@@ -30,5 +31,5 @@ action "publish" {
   uses = "actions/npm@master"
   secrets = ["NPM_AUTH_TOKEN"]
   args = "publish --access public --unsafe-perm"
-  needs = ["version tag", "test", "lint"]
+  needs = ["version tag"]
 }
