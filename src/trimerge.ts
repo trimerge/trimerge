@@ -1,7 +1,6 @@
 import { Path } from './path';
 import { CannotMerge } from './cannot-merge';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export type MergeFn<T> = (
   orig: T,
   left: T,

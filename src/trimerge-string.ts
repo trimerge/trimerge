@@ -1,7 +1,6 @@
 import { CannotMerge } from './cannot-merge';
 import { diff3MergeStrings } from './diff3-string';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export function trimergeString(
   orig: any = '',
   left: any = '',

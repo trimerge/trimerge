@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function type(object: any): typeof object | 'array' | 'null' {
   const t = typeof object;
   if (t !== 'object') {

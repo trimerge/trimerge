@@ -2,7 +2,6 @@ import { Path, PathKey } from './path';
 import { CannotMerge } from './cannot-merge';
 import { AnyMerge } from './trimerge';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 function* iterateKeys<K>(...maps: Map<K, any>[]): IterableIterator<K> {
   for (const map of maps) {
     yield* map.keys();

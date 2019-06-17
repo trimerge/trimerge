@@ -44,7 +44,6 @@ export function routeMergers(...routes: Route[]): AnyMerge {
     addRouter(root, path, merger);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (orig: any, left: any, right: any, path: Path, mergeFn: AnyMerge) => {
     let node: RouteNode = root;
     for (let i = 0; i < path.length; i++) {
