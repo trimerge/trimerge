@@ -1,33 +1,34 @@
-workflow "Test" {
+workflow "Test, build, and publish" {
   on = "push"
-  resolves = ["test", "lint"]
+  resolves = ["test", "lint", "publish"]
 }
 
 action "npm install" {
-  uses = "actions/npm@59b64a598378f31e49cb76f27d6f3312b582f680"
+  uses = "actions/npm@master"
   args = "install"
 }
 
 action "test" {
-  uses = "actions/npm@59b64a598378f31e49cb76f27d6f3312b582f680"
+  uses = "actions/npm@master"
   args = "run test-ci"
   needs = ["npm install"]
 }
 
 action "lint" {
-  uses = "actions/npm@59b64a598378f31e49cb76f27d6f3312b582f680"
+  uses = "actions/npm@master"
   args = "run lint"
   needs = ["npm install"]
 }
 
-workflow "Publish to NPM" {
-  on = "release"
-  resolves = ["publish"]
+# Filter for a new tag
+action "version tag" {
+  uses = "actions/bin/filter@master"
+  args = "tag v*"
 }
 
 action "publish" {
-  uses = "actions/npm@59b64a598378f31e49cb76f27d6f3312b582f680"
+  uses = "actions/npm@master"
   secrets = ["NPM_AUTH_TOKEN"]
   args = "publish --access public --unsafe-perm"
-  needs = ["test", "lint"]
+  needs = ["version tag", "test", "lint"]
 }
