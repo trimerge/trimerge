@@ -1,6 +1,6 @@
 {
   "name": "trimerge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "three way merge JSON and arbitrary structures",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
