@@ -48,7 +48,6 @@ describe('routeMergers() can build', () => {
   });
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mergeLeft(_orig: any, left: any): any {
   return left;
 }
