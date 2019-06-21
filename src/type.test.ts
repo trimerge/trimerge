@@ -25,12 +25,25 @@ describe('type', () => {
   it('works on null', () => {
     expect(type(null)).toBe('null');
   });
+  it('works on functions', () => {
+    expect(type(() => {})).toBe('function');
+    expect(type(function() {})).toBe('function');
+    expect(type(String.fromCharCode)).toBe('function');
+    expect(type(new Function())).toBe('function');
+  });
   it('works on objects', () => {
     expect(type({})).toBe('object');
     expect(type({ length: 5 })).toBe('object');
-    expect(type(new Date())).toBe('object');
     expect(type(new Object())).toBe('object');
-    expect(type(new String())).toBe('object');
-    expect(type(new Boolean())).toBe('object');
+    expect(type(Object.create(null))).toBe('object');
+  });
+  it('works on class instances', () => {
+    expect(type(Object.create({}))).toBe('instance');
+    expect(type(new Date())).toBe('instance');
+    expect(type(new String())).toBe('instance');
+    expect(type(new Boolean())).toBe('instance');
+    expect(type(/regexp/)).toBe('instance');
+    class Foo {}
+    expect(type(new Foo())).toBe('instance');
   });
 });

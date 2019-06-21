@@ -1,4 +1,6 @@
-export function type(object: any): typeof object | 'array' | 'null' {
+export function type(
+  object: any,
+): typeof object | 'instance' | 'array' | 'null' {
   const t = typeof object;
   if (t !== 'object') {
     return t;
@@ -9,5 +11,9 @@ export function type(object: any): typeof object | 'array' | 'null' {
   if (Array.isArray(object)) {
     return 'array';
   }
-  return 'object';
+  const proto = Object.getPrototypeOf(object);
+  if (proto === Object.prototype || proto === null) {
+    return 'object';
+  }
+  return 'instance';
 }
