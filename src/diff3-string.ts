@@ -1,4 +1,4 @@
-import { diff3MergeIndices } from 'node-diff3';
+import { diff3MergeIndices } from './node-diff3';
 
 export type ConflictIndex = [
   -1,
@@ -7,7 +7,7 @@ export type ConflictIndex = [
   number,
   number,
   number,
-  number
+  number,
 ];
 export type Side = 0 | 1 | 2;
 export type SideIndex = [Side, number, number];

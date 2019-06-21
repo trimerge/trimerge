@@ -1,6 +1,6 @@
 import { JSONArray, JSONObject, JSONValue } from './json';
 import { Path } from './path';
-import { diff3MergeIndices, Index } from 'node-diff3';
+import { diff3MergeIndices, Index } from './node-diff3';
 import { CannotMerge } from './cannot-merge';
 import deepEqual from './json-equal';
 import { type } from './type';
@@ -57,36 +57,30 @@ function internalTrimergeArray(
   const origMap: JSONObject = {};
   const leftMap: JSONObject = {};
   const rightMap: JSONObject = {};
-  const origKeys = orig.map(
-    (item, index): string => {
-      const key = getArrayItemKey(item, index, path);
-      if (key in origMap) {
-        throw new Error(`Duplicate array key '${key}' at /${path}`);
-      }
-      origMap[key] = item;
-      return key;
-    },
-  );
-  const leftKeys = left.map(
-    (item, index): string => {
-      const key = getArrayItemKey(item, index, path);
-      if (key in leftMap) {
-        throw new Error(`Duplicate array key '${key}' at /${path}`);
-      }
-      leftMap[key] = item;
-      return key;
-    },
-  );
-  const rightKeys = right.map(
-    (item, index): string => {
-      const key = getArrayItemKey(item, index, path);
-      if (key in rightMap) {
-        throw new Error(`Duplicate array key '${key}' at /${path}`);
-      }
-      rightMap[key] = item;
-      return key;
-    },
-  );
+  const origKeys = orig.map((item, index): string => {
+    const key = getArrayItemKey(item, index, path);
+    if (key in origMap) {
+      throw new Error(`Duplicate array key '${key}' at /${path}`);
+    }
+    origMap[key] = item;
+    return key;
+  });
+  const leftKeys = left.map((item, index): string => {
+    const key = getArrayItemKey(item, index, path);
+    if (key in leftMap) {
+      throw new Error(`Duplicate array key '${key}' at /${path}`);
+    }
+    leftMap[key] = item;
+    return key;
+  });
+  const rightKeys = right.map((item, index): string => {
+    const key = getArrayItemKey(item, index, path);
+    if (key in rightMap) {
+      throw new Error(`Duplicate array key '${key}' at /${path}`);
+    }
+    rightMap[key] = item;
+    return key;
+  });
 
   const obj = internalTrimergeJsonObject(
     origMap,
