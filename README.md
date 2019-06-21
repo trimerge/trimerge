@@ -18,3 +18,7 @@ const s3 = { hello: 1 };
 const merger = combineMergers(trimergeEquality, trimergeJsonObject);
 merger(s1, s2, s3); // => { hello: 1, there: 2 }
 ```
+
+## License
+
+Based on MIT licensed code from [node-diff3](https://github.com/bhousel/node-diff3).
