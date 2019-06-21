@@ -157,6 +157,14 @@ describe('trimergeJsonObject', () => {
     const merger = combineMergers(trimergeJsonObject);
     expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
+  it('does not class instances', () => {
+    class Foo {}
+    const s1 = new Foo();
+    const s2 = new Foo();
+    const s3 = new Foo();
+    const merger = combineMergers(trimergeJsonObject);
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
+  });
 });
 
 describe('arrays', () => {
