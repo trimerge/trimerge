@@ -15,5 +15,5 @@ export {
   trimergeJsonObject,
 } from './trimerge-json';
 export { routeMergers, RouteWildCard } from './trimerge-router';
-export { trimergeMap } from './trimerge-map';
+export { trimergeMap, trimergeUnorderedMap } from './trimerge-map';
 export { trimergeString } from './trimerge-string';
