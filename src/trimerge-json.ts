@@ -1,10 +1,10 @@
 import { JSONArray, JSONObject, JSONValue } from './json';
 import { Path } from './path';
-import { diff3MergeIndices, Index } from './node-diff3';
 import { CannotMerge } from './cannot-merge';
 import deepEqual from './json-equal';
 import { type } from './type';
 import { MergeFn, trimergeEqualityCreator } from './trimerge';
+import { diff3Keys } from './diff3-keys';
 
 type ArrayKeyFn = (item: any, index: number, arrayPath: Path) => string;
 
@@ -94,47 +94,9 @@ function internalTrimergeArray(
   );
 
   const result: JSONValue[] = [];
-  const sides: string[][] = [leftKeys, origKeys, rightKeys];
-  const indices: Index[] = diff3MergeIndices(leftKeys, origKeys, rightKeys);
-  for (let i = 0; i < indices.length; i++) {
-    const index: Index = indices[i];
-    if (index[0] === -1) {
-      const [
-        ,
-        leftStart,
-        leftLength,
-        origStart,
-        origLength,
-        rightStart,
-        rightLength,
-      ] = index;
-      const origEnd = origStart + origLength;
-      const leftEnd = leftStart + leftLength;
-      const rightEnd = rightStart + rightLength;
-      // const leftSlice = new Set(leftKeys.slice(leftStart, leftEnd));
-      const rightSlice = new Set(rightKeys.slice(rightStart, rightEnd));
-      const origSlice = new Set(origKeys.slice(origStart, origEnd));
-      for (let j = leftStart; j < leftEnd; j++) {
-        const key = leftKeys[j];
-        if (rightSlice.has(key) || !origSlice.has(key)) {
-          result.push(obj[key]);
-        }
-      }
-      for (let j = rightStart; j < rightEnd; j++) {
-        const key = rightKeys[j];
-        if (!origSlice.has(key)) {
-          result.push(obj[key]);
-        }
-      }
-    } else {
-      const [side, start, length] = index;
-      const arr = sides[side];
-      const end = start + length;
-      for (let j = start; j < end; j++) {
-        result.push(obj[arr[j]]);
-      }
-    }
-  }
+  diff3Keys(leftKeys, origKeys, rightKeys, (key) => {
+    result.push(obj[key]);
+  });
   return result;
 }
 

@@ -1,6 +1,7 @@
 import { Path, PathKey } from './path';
 import { CannotMerge } from './cannot-merge';
 import { MergeFn } from './trimerge';
+import { diff3Keys } from './diff3-keys';
 
 function* iterateKeys<K>(...maps: Map<K, any>[]): IterableIterator<K> {
   for (const map of maps) {
@@ -8,7 +9,7 @@ function* iterateKeys<K>(...maps: Map<K, any>[]): IterableIterator<K> {
   }
 }
 
-export function trimergeMap(
+export function trimergeUnorderedMap(
   orig: any,
   left: any,
   right: any,
@@ -36,5 +37,40 @@ export function trimergeMap(
       newMap.set(key, merged);
     }
   });
+  return newMap;
+}
+
+export function trimergeMap(
+  orig: any,
+  left: any,
+  right: any,
+  path: Path,
+  merge: MergeFn,
+): Map<any, any> | typeof CannotMerge {
+  if (
+    !(orig instanceof Map) ||
+    !(left instanceof Map) ||
+    !(right instanceof Map)
+  ) {
+    return CannotMerge;
+  }
+  const newMap = new Map<any, any>();
+  diff3Keys(
+    Array.from(left.keys()),
+    Array.from(orig.keys()),
+    Array.from(right.keys()),
+    (key) => {
+      newMap.set(
+        key,
+        merge(
+          orig.get(key),
+          left.get(key),
+          right.get(key),
+          [...path, key],
+          merge,
+        ),
+      );
+    },
+  );
   return newMap;
 }
