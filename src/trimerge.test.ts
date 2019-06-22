@@ -46,6 +46,18 @@ describe('combineMergers()', () => {
     ]);
   });
 
+  it('supports nesting', () => {
+    const s1 = { state1: true };
+    const s2 = { state2: true };
+    const s3 = { state3: true };
+    const merger1 = jest.fn(() => CannotMerge);
+    const merger2 = jest.fn((orig) => orig);
+    const combinedMerge = combineMergers(combineMergers(merger1), merger2);
+    expect(merger1.mock.calls).toHaveLength(0);
+    expect(combinedMerge(s1, s2, s3)).toBe(s1);
+    expect(merger1.mock.calls).toEqual([[s1, s2, s3, [], combinedMerge]]);
+  });
+
   it('fails if nothing can merge', () => {
     const s1 = { state1: true };
     const s2 = { state2: true };

@@ -31,6 +31,10 @@ export function combineMergers(...mergers: MergeFn[]): RootMergeFn {
         return result;
       }
     }
+    // When nesting combineMergers, don't throw
+    if (mergeFn !== combinedMerger) {
+      return CannotMerge;
+    }
     throw new CannotMergeError(basePath);
   };
   return combinedMerger;
