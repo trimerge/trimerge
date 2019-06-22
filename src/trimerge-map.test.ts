@@ -70,7 +70,7 @@ describe('trimergeMap', () => {
       trimergeMap,
     );
     expect(merger(s1, s2, s3)).toEqual(new Map([['world', 3], ['hello', 1]]));
-    expect(paths).toEqual([[], ['hello'], ['world']]);
+    expect(paths).toEqual([[], ['world'], ['hello']]);
   });
   it('moves field 2', () => {
     const s1 = new Map([
@@ -106,7 +106,7 @@ describe('trimergeMap', () => {
     expect(merger(s1, s2, s3)).toEqual(
       new Map([['e', 5], ['b', 2], ['c', 3], ['d', 4], ['a', 1], ['f', 6]]),
     );
-    expect(paths).toEqual([[], ['a'], ['b'], ['c'], ['d'], ['e'], ['f']]);
+    expect(paths).toEqual([[], ['e'], ['b'], ['c'], ['d'], ['a'], ['f']]);
   });
   it('removes field', () => {
     const s1 = new Map([['hello', 1], ['world', 2]]);
@@ -119,7 +119,7 @@ describe('trimergeMap', () => {
       trimergeMap,
     );
     expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1]]));
-    expect(paths).toEqual([[], ['hello'], ['world']]);
+    expect(paths).toEqual([[], ['hello']]);
   });
   it('adds and changes field', () => {
     const s1 = new Map([['hello', 1], ['world', 2]]);
@@ -147,7 +147,7 @@ describe('trimergeMap', () => {
       trimergeMap,
     );
     expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1], ['there', 2]]));
-    expect(paths).toEqual([[], ['hello'], ['world'], ['there']]);
+    expect(paths).toEqual([[], ['hello'], ['there']]);
   });
   it('does not merge if not all Maps 1', () => {
     const s1 = false;
