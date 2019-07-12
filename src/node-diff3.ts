@@ -24,7 +24,7 @@ export type Index = ConflictIndex | SideIndex;
 // comparison, Bell Telephone Laboratories CSTR #41 (1976)
 // http://www.cs.dartmouth.edu/~doug/
 //
-interface Candidate {
+export interface Candidate {
   aIndex: number;
   bIndex: number;
   chain: Candidate | null;

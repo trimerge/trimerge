@@ -1,7 +1,4 @@
-'use strict';
-
-// From https://github.com/epoberezkin/fast-deep-equal/blob/master/spec/tests.js
-import jsonEqual from './json-equal';
+import { jsonEqual } from './json-equal';
 
 function func1() {}
 function func2() {}
