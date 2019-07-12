@@ -1,14 +1,14 @@
 import { JSONArray, JSONObject, JSONValue } from './json';
 import { Path } from './path';
 import { CannotMerge } from './cannot-merge';
-import deepEqual from './json-equal';
+import { jsonEqual } from './json-equal';
 import { type } from './type';
 import { MergeFn, trimergeEqualityCreator } from './trimerge';
 import { diff3Keys } from './diff3-keys';
 
 type ArrayKeyFn = (item: any, index: number, arrayPath: Path) => string;
 
-export const trimergeJsonDeepEqual = trimergeEqualityCreator(deepEqual);
+export const trimergeJsonDeepEqual = trimergeEqualityCreator(jsonEqual);
 
 function jsonSameType(
   orig: JSONValue,

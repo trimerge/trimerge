@@ -7,7 +7,7 @@ const isArray = Array.isArray;
 const keyList = Object.keys;
 const hasProp = Object.prototype.hasOwnProperty;
 
-export default function jsonEqual(a: any, b: any) {
+export function jsonEqual(a: any, b: any) {
   if (a === b) return true;
 
   if (a && b && typeof a === 'object' && typeof b === 'object') {
