@@ -14,7 +14,12 @@ export {
   trimergeJsonDeepEqual,
   trimergeJsonObject,
 } from './trimerge-json';
-export { routeMergers, RouteWildCard } from './trimerge-router';
+export {
+  routeMergers,
+  RouteWildCard,
+  RoutePathKey,
+  RoutePath,
+} from './trimerge-router';
 export { trimergeMap, trimergeUnorderedMap } from './trimerge-map';
 export { trimergeString } from './trimerge-string';
 export {
