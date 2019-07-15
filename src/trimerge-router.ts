@@ -5,7 +5,7 @@ import { CannotMerge } from './cannot-merge';
 class RouteWildCardClass {}
 export const RouteWildCard = new RouteWildCardClass();
 export type RoutePathKey = string | number | typeof RouteWildCard;
-export type RoutePath = RoutePathKey[];
+export type RoutePath = readonly RoutePathKey[];
 
 type Route = [RoutePath, MergeFn];
 export function routeMergers(...routes: Route[]): MergeFn {
