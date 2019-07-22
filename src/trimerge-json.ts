@@ -101,7 +101,7 @@ function internalTrimergeArray(
 }
 
 export function trimergeJsonObject(
-  orig: any,
+  orig: any = {},
   left: any,
   right: any,
   path: Path,
