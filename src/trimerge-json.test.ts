@@ -77,6 +77,23 @@ describe('trimergeJsonObject', () => {
     });
     expect(paths).toEqual([[], ['hello'], ['world'], ['there'], ['here']]);
   });
+  it('adds against undefined', () => {
+    const s1 = undefined;
+    const s2 = { hello: 1, there: 3 };
+    const s3 = { hello: 1, here: 4 };
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeJsonObject,
+    );
+    expect(merger(s1, s2, s3)).toEqual({
+      hello: 1,
+      there: 3,
+      here: 4,
+    });
+    expect(paths).toEqual([[], ['hello'], ['there'], ['here']]);
+  });
   it('changes field', () => {
     const s1 = { hello: 1, world: 2 };
     const s2 = { hello: 1, world: 2 };
