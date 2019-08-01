@@ -1,13 +1,25 @@
 import { diff3MergeIndices, Index } from './node-diff3';
 
 export function diff3Keys<T>(
-  leftKeys: ArrayLike<T>,
   origKeys: ArrayLike<T>,
+  leftKeys: ArrayLike<T>,
   rightKeys: ArrayLike<T>,
   callback: (key: T) => void,
+  allowOrderConflicts: boolean = false,
 ): void {
   const sides: ArrayLike<T>[] = [leftKeys, origKeys, rightKeys];
   const indices: Index[] = diff3MergeIndices(leftKeys, origKeys, rightKeys);
+  const seenKeys = new Set<T>();
+  function emit(key: T) {
+    if (seenKeys.has(key)) {
+      if (!allowOrderConflicts) {
+        throw new Error('order conflict');
+      }
+    } else {
+      seenKeys.add(key);
+      callback(key);
+    }
+  }
   for (let i = 0; i < indices.length; i++) {
     const index: Index = indices[i];
     if (index[0] === -1) {
@@ -34,13 +46,14 @@ export function diff3Keys<T>(
       for (let j = leftStart; j < leftEnd; j++) {
         const key = leftKeys[j];
         if (rightSlice.has(key) || !origSlice.has(key)) {
-          callback(key);
+          emit(key);
         }
       }
       for (let j = rightStart; j < rightEnd; j++) {
         const key = rightKeys[j];
+        // Added by right
         if (!origSlice.has(key)) {
-          callback(key);
+          emit(key);
         }
       }
     } else {
@@ -48,7 +61,7 @@ export function diff3Keys<T>(
       const arr = sides[side];
       const end = start + length;
       for (let j = start; j < end; j++) {
-        callback(arr[j]);
+        emit(arr[j]);
       }
     }
   }
