@@ -24,7 +24,10 @@ function jsonSameType(
   return typea;
 }
 
-export function trimergeArrayCreator(getArrayItemKey: ArrayKeyFn): MergeFn {
+export function trimergeArrayCreator(
+  getArrayItemKey: ArrayKeyFn,
+  allowOrderConflicts: boolean = false,
+): MergeFn {
   return (
     orig: any,
     left: any,
@@ -42,6 +45,7 @@ export function trimergeArrayCreator(getArrayItemKey: ArrayKeyFn): MergeFn {
       path,
       mergeFn,
       getArrayItemKey,
+      allowOrderConflicts,
     );
   };
 }
@@ -53,6 +57,7 @@ function internalTrimergeArray(
   path: Path,
   mergeFn: MergeFn,
   getArrayItemKey: ArrayKeyFn,
+  allowOrderConflicts: boolean,
 ): JSONValue[] {
   const origMap: JSONObject = {};
   const leftMap: JSONObject = {};
@@ -94,9 +99,15 @@ function internalTrimergeArray(
   );
 
   const result: JSONValue[] = [];
-  diff3Keys(leftKeys, origKeys, rightKeys, (key) => {
-    result.push(obj[key]);
-  });
+  diff3Keys(
+    origKeys,
+    leftKeys,
+    rightKeys,
+    (key) => {
+      result.push(obj[key]);
+    },
+    allowOrderConflicts,
+  );
   return result;
 }
 

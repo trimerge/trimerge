@@ -46,6 +46,7 @@ export function trimergeMap(
   right: any,
   path: Path,
   merge: MergeFn,
+  allowOrderConflicts: boolean = false,
 ): Map<any, any> | typeof CannotMerge {
   if (
     !(orig instanceof Map) ||
@@ -56,8 +57,8 @@ export function trimergeMap(
   }
   const newMap = new Map<any, any>();
   diff3Keys(
-    Array.from(left.keys()),
     Array.from(orig.keys()),
+    Array.from(left.keys()),
     Array.from(right.keys()),
     (key) => {
       newMap.set(
@@ -71,6 +72,7 @@ export function trimergeMap(
         ),
       );
     },
+    allowOrderConflicts,
   );
   return newMap;
 }

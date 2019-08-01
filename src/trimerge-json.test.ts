@@ -189,6 +189,10 @@ describe('arrays', () => {
     trimergeEquality,
     trimergeArrayCreator((item) => String(item)),
   );
+  const basicArrayMergeAllowOrderConflicts = combineMergers(
+    trimergeEquality,
+    trimergeArrayCreator((item) => String(item), true),
+  );
   const idArrayMerge = combineMergers(
     trimergeJsonDeepEqual,
     trimergeArrayCreator((item: any) => String(item.id)),
@@ -255,6 +259,25 @@ describe('arrays', () => {
     const state2 = [1, 5, 2, 4, 6];
     const state3 = [2, 3, 4, 1, 5, 6];
     expect(basicArrayMerge(state1, state2, state3)).toEqual([5, 2, 4, 1, 6]);
+  });
+  it('throws on conflicting array move', () => {
+    const state1 = [1, 2, 3, 4];
+    const state2 = [3, 1, 2, 4];
+    const state3 = [1, 2, 4, 3];
+    expect(() => basicArrayMerge(state1, state2, state3)).toThrow(
+      'order conflict',
+    );
+  });
+  it('handles conflicting array move when allowed', () => {
+    const state1 = [1, 2, 3, 4];
+    const state2 = [3, 1, 2, 4];
+    const state3 = [1, 2, 4, 3];
+    expect(basicArrayMergeAllowOrderConflicts(state1, state2, state3)).toEqual([
+      3,
+      1,
+      2,
+      4,
+    ]);
   });
   it('handles array removal', () => {
     const state1 = [1, 2, 3];
