@@ -6,7 +6,10 @@
 // - Generalized for any array type
 // -
 
-type Range = { location: number; length: number };
+interface Range {
+  location: number;
+  length: number;
+}
 
 export function makeRange(location: number, length: number): Range {
   return { location, length };
@@ -16,28 +19,28 @@ export function upperBound({ location, length }: Range): number {
   return location + length;
 }
 
-export type ConflictIndex = {
+export interface ConflictIndex {
   type: 'conflict';
   aRange: Range;
   oRange: Range;
   bRange: Range;
-};
+}
 
-type OkIndexA = {
+interface OkIndexA {
   type: 'okA';
   length: number;
   aIndex: number;
   oIndex: number | undefined;
   bIndex: number | undefined;
-};
+}
 
-type OkIndexB = {
+interface OkIndexB {
   type: 'okB';
   length: number;
   aIndex: number | undefined;
   oIndex: number | undefined;
   bIndex: number;
-};
+}
 
 export type OkIndex = OkIndexA | OkIndexB;
 
@@ -48,11 +51,11 @@ export type Index = ConflictIndex | OkIndex;
 // comparison, Bell Telephone Laboratories CSTR #41 (1976)
 // http://www.cs.dartmouth.edu/~doug/
 //
-export type Candidate = {
+export interface Candidate {
   aIndex: number;
   bIndex: number;
   chain: Candidate | undefined;
-};
+}
 
 // Expects two arrays
 export function LCS<T>(a: ArrayLike<T>, b: ArrayLike<T>): Candidate {
@@ -114,10 +117,10 @@ export function LCS<T>(a: ArrayLike<T>, b: ArrayLike<T>): Candidate {
   return candidates[candidates.length - 1];
 }
 
-type DiffIndicesResult = {
+interface DiffIndicesResult {
   a: Range;
   b: Range;
-};
+}
 // We apply the LCS to give a simple representation of the
 // offsets and lengths of mismatched chunks in the input
 // files. This is used by diff3MergeIndices below.
@@ -170,11 +173,11 @@ export function diff3MergeIndices<T>(
   const m1 = diffIndices(o, a);
   const m2 = diffIndices(o, b);
 
-  type Hunk = {
+  interface Hunk {
     side: 'a' | 'b';
     oRange: Range;
     sideRange: Range;
-  };
+  }
 
   const hunks: Hunk[] = [];
   function addHunk(h: DiffIndicesResult, side: 'a' | 'b') {
