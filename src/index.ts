@@ -24,10 +24,11 @@ export { trimergeMap, trimergeUnorderedMap } from './trimerge-map';
 export { trimergeString } from './trimerge-string';
 export {
   Candidate,
+  OkIndex,
+  OkIndexA,
+  OkIndexB,
   ConflictIndex,
   Index,
-  Side,
-  SideIndex,
   LCS,
   diffIndices,
   diff3MergeIndices,

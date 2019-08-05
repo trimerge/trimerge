@@ -1,4 +1,4 @@
-import { diff3MergeIndices, Index } from './node-diff3';
+import { diff3MergeIndices, Index, upperBound } from './node-diff3';
 
 export interface Range<T> {
   start: number;
@@ -46,29 +46,24 @@ export function diff3MergeStringRanges<T>(
 ): { text: string; ranges: Range<T>[] } {
   let result = '';
   const ranges: Range<T>[] = [];
-  const sideStrings: string[] = [left, base, right];
-  const sideRanges: Range<T>[][] = [leftRanges, baseRanges, rightRanges];
-  const indices: Index[] = diff3MergeIndices(left, base, right);
+  const indices: Index[] = diff3MergeIndices(base, left, right);
 
   const addRange = (range: Range<T>) => ranges.push(range);
 
   for (let i = 0; i < indices.length; i++) {
     const index: Index = indices[i];
-    if (index[0] === -1) {
-      const [
-        ,
-        leftStart,
-        leftLength,
-        baseStart,
-        baseLength,
-        rightStart,
-        rightLength,
-      ] = index;
-      const leftEnd = leftStart + leftLength;
+    if (index.type === 'conflict') {
+      const {
+        aRange: { location: leftStart, length: leftLength },
+        oRange: { location: baseStart, length: baseLength },
+        bRange: { location: rightStart, length: rightLength },
+      } = index;
+      const leftEnd = upperBound(index.aRange);
+      const baseEnd = upperBound(index.oRange);
+      const rightEnd = upperBound(index.bRange);
+
       const leftSlice = left.slice(leftStart, leftEnd);
-      const baseEnd = baseStart + baseLength;
       const baseSlice = base.slice(baseStart, baseEnd);
-      const rightEnd = rightStart + rightLength;
       const rightSlice = right.slice(rightStart, rightEnd);
       forEachSliceRanges(
         leftRanges,
@@ -108,10 +103,39 @@ export function diff3MergeStringRanges<T>(
         result += rightSlice;
       }
     } else {
-      const [side, start, length] = index;
-      const end = start + length;
-      forEachSliceRanges(sideRanges[side], start, end, result.length, addRange);
-      result += sideStrings[side].slice(start, end);
+      const start = index.type === 'okA' ? index.aIndex : index.bIndex;
+      const end = start + index.length;
+      const str = index.type === 'okA' ? left : right;
+
+      if (index.aIndex !== undefined) {
+        forEachSliceRanges(
+          leftRanges,
+          index.aIndex,
+          index.aIndex + index.length,
+          result.length,
+          addRange,
+        );
+      }
+      if (index.bIndex !== undefined) {
+        forEachSliceRanges(
+          rightRanges,
+          index.bIndex,
+          index.bIndex + index.length,
+          result.length,
+          addRange,
+        );
+      }
+      if (index.oIndex !== undefined) {
+        forEachSliceRanges(
+          baseRanges,
+          index.oIndex,
+          index.oIndex + index.length,
+          result.length,
+          addRange,
+        );
+      }
+
+      result += str.slice(start, end);
     }
   }
   return { text: result, ranges };

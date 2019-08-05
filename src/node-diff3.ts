@@ -6,18 +6,45 @@
 // - Generalized for any array type
 // -
 
-export type ConflictIndex = [
-  -1,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-];
-export type Side = 0 | 1 | 2;
-export type SideIndex = [Side, number, number];
-export type Index = ConflictIndex | SideIndex;
+interface Range {
+  location: number;
+  length: number;
+}
+
+export function makeRange(location: number, length: number): Range {
+  return { location, length };
+}
+
+export function upperBound({ location, length }: Range): number {
+  return location + length;
+}
+
+export interface ConflictIndex {
+  type: 'conflict';
+  aRange: Range;
+  oRange: Range;
+  bRange: Range;
+}
+
+export interface OkIndexA {
+  type: 'okA';
+  length: number;
+  aIndex: number;
+  oIndex: number | undefined;
+  bIndex: number | undefined;
+}
+
+export interface OkIndexB {
+  type: 'okB';
+  length: number;
+  aIndex: number | undefined;
+  oIndex: number | undefined;
+  bIndex: number;
+}
+
+export type OkIndex = OkIndexA | OkIndexB;
+
+export type Index = ConflictIndex | OkIndex;
 
 // Text diff algorithm following Hunt and McIlroy 1976.
 // J. W. Hunt and M. D. McIlroy, An algorithm for differential file
@@ -27,7 +54,7 @@ export type Index = ConflictIndex | SideIndex;
 export interface Candidate {
   aIndex: number;
   bIndex: number;
-  chain: Candidate | null;
+  chain: Candidate | undefined;
 }
 
 // Expects two arrays
@@ -43,7 +70,9 @@ export function LCS<T>(a: ArrayLike<T>, b: ArrayLike<T>): Candidate {
     }
   }
 
-  const candidates: Candidate[] = [{ aIndex: -1, bIndex: -1, chain: null }];
+  const candidates: Candidate[] = [
+    { aIndex: -1, bIndex: -1, chain: undefined },
+  ];
 
   for (let i = 0; i < a.length; i++) {
     const line = a[i];
@@ -89,8 +118,8 @@ export function LCS<T>(a: ArrayLike<T>, b: ArrayLike<T>): Candidate {
 }
 
 interface DiffIndicesResult {
-  a: [number, number];
-  b: [number, number];
+  a: Range;
+  b: Range;
 }
 // We apply the LCS to give a simple representation of the
 // offsets and lengths of mismatched chunks in the input
@@ -104,8 +133,8 @@ export function diffIndices<T>(
   let tail2 = b.length;
 
   for (
-    let candidate: Candidate | null = LCS(a, b);
-    candidate !== null;
+    let candidate: Candidate | undefined = LCS(a, b);
+    candidate !== undefined;
     candidate = candidate.chain
   ) {
     const mismatchLength1 = tail1 - candidate.aIndex - 1;
@@ -115,8 +144,8 @@ export function diffIndices<T>(
 
     if (mismatchLength1 || mismatchLength2) {
       result.push({
-        a: [tail1 + 1, mismatchLength1],
-        b: [tail2 + 1, mismatchLength2],
+        a: makeRange(tail1 + 1, mismatchLength1),
+        b: makeRange(tail2 + 1, mismatchLength2),
       });
     }
   }
@@ -137,47 +166,67 @@ export function diffIndices<T>(
 //
 // (http://www.cis.upenn.edu/~bcpierce/papers/diff3-short.pdf)
 export function diff3MergeIndices<T>(
-  a: ArrayLike<T>,
   o: ArrayLike<T>,
+  a: ArrayLike<T>,
   b: ArrayLike<T>,
 ): Index[] {
   const m1 = diffIndices(o, a);
   const m2 = diffIndices(o, b);
 
-  type Hunk = [number, 0 | 2, number, number, number];
+  interface Hunk {
+    side: 'a' | 'b';
+    oRange: Range;
+    sideRange: Range;
+  }
+
   const hunks: Hunk[] = [];
-  function addHunk(h: DiffIndicesResult, side: 0 | 2) {
-    hunks.push([h.a[0], side, h.a[1], h.b[0], h.b[1]]);
+  function addHunk(h: DiffIndicesResult, side: 'a' | 'b') {
+    hunks.push({
+      side,
+      oRange: h.a,
+      sideRange: h.b,
+    });
   }
   for (let i = 0; i < m1.length; i++) {
-    addHunk(m1[i], 0);
+    addHunk(m1[i], 'a');
   }
   for (let i = 0; i < m2.length; i++) {
-    addHunk(m2[i], 2);
+    addHunk(m2[i], 'b');
   }
-  hunks.sort((x, y) => x[0] - y[0]);
+  hunks.sort((x, y) => x.oRange.location - y.oRange.location);
 
   const result: Index[] = [];
-  let commonOffset = 0;
+  let oOffset = 0;
+  let aOffset = 0;
+  let bOffset = 0;
   function copyCommon(targetOffset: number) {
-    if (targetOffset > commonOffset) {
-      result.push([1, commonOffset, targetOffset - commonOffset]);
-      commonOffset = targetOffset;
+    const delta = targetOffset - oOffset;
+    if (delta > 0) {
+      result.push({
+        type: 'okA',
+        length: delta,
+        aIndex: aOffset,
+        oIndex: oOffset,
+        bIndex: bOffset,
+      });
+      aOffset += delta;
+      bOffset += delta;
+      oOffset += delta;
     }
   }
 
   for (let hunkIndex = 0; hunkIndex < hunks.length; hunkIndex++) {
     const firstHunkIndex = hunkIndex;
     let hunk = hunks[hunkIndex];
-    const regionLhs = hunk[0];
-    let regionRhs = regionLhs + hunk[2];
+    const regionLhs = hunk.oRange.location;
+    let regionRhs = upperBound(hunk.oRange);
     while (hunkIndex < hunks.length - 1) {
       const maybeOverlapping = hunks[hunkIndex + 1];
-      const maybeLhs = maybeOverlapping[0];
+      const maybeLhs = maybeOverlapping.oRange.location;
       if (maybeLhs > regionRhs) {
         break;
       }
-      regionRhs = Math.max(regionRhs, maybeLhs + maybeOverlapping[2]);
+      regionRhs = Math.max(regionRhs, upperBound(maybeOverlapping.oRange));
       hunkIndex++;
     }
 
@@ -186,9 +235,32 @@ export function diff3MergeIndices<T>(
       // The 'overlap' was only one hunk long, meaning that
       // there's no conflict here. Either a and o were the
       // same, or b and o were the same.
-      if (hunk[4] > 0) {
-        result.push([hunk[1], hunk[3], hunk[4]]);
+      if (hunk.sideRange.length > 0) {
+        if (hunk.side === 'a') {
+          result.push({
+            type: 'okA',
+            length: hunk.sideRange.length,
+            oIndex: undefined,
+            aIndex: hunk.sideRange.location,
+            bIndex: undefined,
+          });
+        } else {
+          result.push({
+            type: 'okB',
+            length: hunk.sideRange.length,
+            oIndex: undefined,
+            aIndex: undefined,
+            bIndex: hunk.sideRange.location,
+          });
+        }
       }
+
+      const delta = regionRhs - oOffset;
+      oOffset = regionRhs;
+      aOffset =
+        hunk.side === 'a' ? upperBound(hunk.sideRange) : aOffset + delta;
+      bOffset =
+        hunk.side === 'b' ? upperBound(hunk.sideRange) : bOffset + delta;
     } else {
       // A proper conflict. Determine the extents of the
       // regions involved from a, o and b. Effectively merge
@@ -197,37 +269,37 @@ export function diff3MergeIndices<T>(
       // in the regions of o that each side changed, and
       // report appropriate spans for the three sides.
       const regions = {
-        0: [a.length, -1, o.length, -1],
-        2: [b.length, -1, o.length, -1],
+        a: [a.length, -1, o.length, -1],
+        b: [b.length, -1, o.length, -1],
       };
       for (let i = firstHunkIndex; i <= hunkIndex; i++) {
         hunk = hunks[i];
-        const side = hunk[1];
+        const side = hunk.side;
         const r = regions[side];
-        const oLhs = hunk[0];
-        const oRhs = oLhs + hunk[2];
-        const abLhs = hunk[3];
-        const abRhs = abLhs + hunk[4];
+        const oLhs = hunk.oRange.location;
+        const oRhs = upperBound(hunk.oRange);
+        const abLhs = hunk.sideRange.location;
+        const abRhs = upperBound(hunk.sideRange);
         r[0] = Math.min(abLhs, r[0]);
         r[1] = Math.max(abRhs, r[1]);
         r[2] = Math.min(oLhs, r[2]);
         r[3] = Math.max(oRhs, r[3]);
       }
-      const aLhs = regions[0][0] + (regionLhs - regions[0][2]);
-      const aRhs = regions[0][1] + (regionRhs - regions[0][3]);
-      const bLhs = regions[2][0] + (regionLhs - regions[2][2]);
-      const bRhs = regions[2][1] + (regionRhs - regions[2][3]);
-      result.push([
-        -1,
-        aLhs,
-        aRhs - aLhs,
-        regionLhs,
-        regionRhs - regionLhs,
-        bLhs,
-        bRhs - bLhs,
-      ]);
+      const aLhs = regions.a[0] + (regionLhs - regions.a[2]);
+      const aRhs = regions.a[1] + (regionRhs - regions.a[3]);
+      const bLhs = regions.b[0] + (regionLhs - regions.b[2]);
+      const bRhs = regions.b[1] + (regionRhs - regions.b[3]);
+      result.push({
+        type: 'conflict',
+        aRange: makeRange(aLhs, aRhs - aLhs),
+        oRange: makeRange(regionLhs, regionRhs - regionLhs),
+        bRange: makeRange(bLhs, bRhs - bLhs),
+      });
+
+      oOffset = regionRhs;
+      aOffset = aRhs;
+      bOffset = bRhs;
     }
-    commonOffset = regionRhs;
   }
 
   copyCommon(o.length);
