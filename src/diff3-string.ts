@@ -40,7 +40,7 @@ export function diff3MergeStringRanges<T>(
   base: string,
   left: string,
   right: string,
-  _baseRanges: Range<T>[] = [],
+  baseRanges: Range<T>[] = [],
   leftRanges: Range<T>[] = [],
   rightRanges: Range<T>[] = [],
 ): { text: string; ranges: Range<T>[] } {
@@ -102,16 +102,40 @@ export function diff3MergeStringRanges<T>(
         result += leftSlice;
         result += rightSlice;
       }
-    } else if (index.type === 'okA') {
-      const start = index.aIndex;
-      const end = start + index.length;
-      forEachSliceRanges(leftRanges, start, end, result.length, addRange);
-      result += left.slice(start, end);
     } else {
-      const start = index.bIndex;
+      const start = index.type === 'okA' ? index.aIndex : index.bIndex;
       const end = start + index.length;
-      forEachSliceRanges(rightRanges, start, end, result.length, addRange);
-      result += right.slice(start, end);
+      const str = index.type === 'okA' ? left : right;
+
+      if (index.aIndex !== undefined) {
+        forEachSliceRanges(
+          leftRanges,
+          index.aIndex,
+          index.aIndex + index.length,
+          result.length,
+          addRange,
+        );
+      }
+      if (index.bIndex !== undefined) {
+        forEachSliceRanges(
+          rightRanges,
+          index.bIndex,
+          index.bIndex + index.length,
+          result.length,
+          addRange,
+        );
+      }
+      if (index.oIndex !== undefined) {
+        forEachSliceRanges(
+          baseRanges,
+          index.oIndex,
+          index.oIndex + index.length,
+          result.length,
+          addRange,
+        );
+      }
+
+      result += str.slice(start, end);
     }
   }
   return { text: result, ranges };
