@@ -26,7 +26,7 @@ export interface ConflictIndex {
   bRange: Range;
 }
 
-interface OkIndexA {
+export interface OkIndexA {
   type: 'okA';
   length: number;
   aIndex: number;
@@ -34,7 +34,7 @@ interface OkIndexA {
   bIndex: number | undefined;
 }
 
-interface OkIndexB {
+export interface OkIndexB {
   type: 'okB';
   length: number;
   aIndex: number | undefined;
