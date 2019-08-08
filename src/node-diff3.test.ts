@@ -171,4 +171,17 @@ describe('LCS', () => {
       },
     });
   });
+  it('is undefined for equal string inputs', () => {
+    expect(LCS('abc123', 'abc123')).toBeUndefined();
+    expect(LCS('', '')).toBeUndefined();
+  });
+  it('is undefined for shallow-equal array inputs', () => {
+    expect(LCS([], [])).toBeUndefined();
+    const x = { x: true };
+    const y = { y: true };
+    expect(LCS([x, y], [x, y])).toBeUndefined();
+  });
+  it('is not undefined for value-equal array inputs', () => {
+    expect(LCS([{ x: true }], [{ x: true }])).not.toBeUndefined();
+  });
 });
