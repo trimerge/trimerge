@@ -175,33 +175,27 @@ describe('diffIndicesString', () => {
   }
   it('is performant for equal large string', () => {
     const a = makeString(200_000);
-    const now = Date.now();
     expect(diffIndicesString(a, a)).toEqual([]);
-    expect(Date.now() - now).toBeLessThan(10);
   });
   it('is performant for large strings with head diff', () => {
     const a = makeString(200_000);
     const b = `***${a}`;
-    const now = Date.now();
     expect(diffIndicesString(a, b)).toEqual([
       {
         a: makeRange(0, 0),
         b: makeRange(0, 3),
       },
     ]);
-    expect(Date.now() - now).toBeLessThan(10);
   });
   it('is performant for large strings with tail diff', () => {
     const a = makeString(200_000);
     const b = `${a}***`;
-    const now = Date.now();
     expect(diffIndicesString(a, b)).toEqual([
       {
         a: makeRange(200_000, 0),
         b: makeRange(200_000, 3),
       },
     ]);
-    expect(Date.now() - now).toBeLessThan(10);
   });
   it('is performant for large strings with scattered changes', () => {
     const a = makeString(200_000);
@@ -215,11 +209,7 @@ describe('diffIndicesString', () => {
     for (let i = addLocs.length - 1; i >= 0; i--) {
       b = `${b.slice(0, addLocs[i])}${'*'.repeat(delta)}${b.slice(addLocs[i])}`;
     }
-
-    const now = Date.now();
-    const res = diffIndicesString(a, b);
-    expect(Date.now() - now).toBeLessThan(500);
-    expect(res).toMatchSnapshot();
+    expect(diffIndicesString(a, b)).toMatchSnapshot();
   });
   it('is performant for large strings with many changes', () => {
     const a = makeString(200_000);
@@ -227,10 +217,7 @@ describe('diffIndicesString', () => {
     for (let i = 0; i < 200_000; i += 100) {
       b = `${b.slice(0, i)}*${b.slice(i + 1)}`;
     }
-
-    const now = Date.now();
-    diffIndicesString(a, b);
-    expect(Date.now() - now).toBeLessThan(500);
+    expect(diffIndicesString(a, b)).toBeDefined();
   });
 });
 
