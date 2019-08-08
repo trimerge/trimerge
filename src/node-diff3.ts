@@ -142,14 +142,15 @@ interface DiffIndicesResult {
 }
 
 export function diffIndicesString(a: string, b: string): DiffIndicesResult[] {
-  const result: DiffIndicesResult[] = [];
-  const diffResult = fastDiff(a as string, b as string);
+  const diffResult = fastDiff(a, b);
 
   let aIndex = 0;
   let bIndex = 0;
 
   let lastA = 0;
   let lastB = 0;
+
+  const result: DiffIndicesResult[] = [];
 
   function flush() {
     if (aIndex > lastA || bIndex > lastB) {
