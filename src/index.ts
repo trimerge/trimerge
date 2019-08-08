@@ -20,7 +20,11 @@ export {
   RoutePathKey,
   RoutePath,
 } from './trimerge-router';
-export { trimergeMap, trimergeUnorderedMap } from './trimerge-map';
+export {
+  trimergeMap,
+  trimergeMapCreator,
+  trimergeUnorderedMap,
+} from './trimerge-map';
 export { trimergeString } from './trimerge-string';
 export {
   Candidate,

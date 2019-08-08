@@ -6,7 +6,11 @@ import {
 } from './trimerge';
 import { Path } from './path';
 import { CannotMerge } from './cannot-merge';
-import { trimergeMap, trimergeUnorderedMap } from './trimerge-map';
+import {
+  trimergeMap,
+  trimergeMapCreator,
+  trimergeUnorderedMap,
+} from './trimerge-map';
 
 function mockPathTrackingMerger(paths: Path[]): MergeFn {
   return (_orig, _left, _right, path = []): typeof CannotMerge => {
@@ -263,6 +267,22 @@ describe('trimergeUnorderedMap', () => {
     );
     expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1], ['there', 2]]));
     expect(paths).toEqual([[], ['hello'], ['world'], ['there']]);
+  });
+  it('fails on order conflict', () => {
+    const s1 = new Map([['hello', 1], ['world', 1], ['there', 1]]);
+    const s2 = new Map([['hello', 1], ['there', 1], ['world', 1]]);
+    const s3 = new Map([['there', 1], ['world', 1], ['hello', 1]]);
+    const merger = combineMergers(trimergeEquality, trimergeMap);
+    expect(() => merger(s1, s2, s3)).toThrowError('order conflict');
+  });
+  it('trimergeMapCreator(true) allows order conflict', () => {
+    const s1 = new Map([['hello', 1], ['world', 1], ['there', 1]]);
+    const s2 = new Map([['hello', 1], ['there', 1], ['world', 1]]);
+    const s3 = new Map([['there', 1], ['world', 1], ['hello', 1]]);
+    const merger = combineMergers(trimergeEquality, trimergeMapCreator(true));
+    expect(merger(s1, s2, s3)).toEqual(
+      new Map([['hello', 1], ['there', 1], ['world', 1]]),
+    );
   });
   it('does not merge if not all Maps 1', () => {
     const s1 = false;
