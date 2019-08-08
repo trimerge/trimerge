@@ -40,9 +40,7 @@
     "url": "https://github.com/marcello3d/trimerge/issues"
   },
   "homepage": "https://github.com/marcello3d/trimerge#readme",
-  "dependencies": {
-    "fast-diff": "^1.2.0"
-  },
+  "dependencies": {},
   "files": [
     "dist/**/*",
     "src/**/*"
@@ -55,6 +53,7 @@
     "codecov": "^3.5.0",
     "eslint": "^6.0.1",
     "eslint-config-prettier": "^6.0.0",
+    "fast-diff": "^1.2.0",
     "husky": "^3.0.0",
     "jest": "^24.8.0",
     "prettier": "1.18.2",
