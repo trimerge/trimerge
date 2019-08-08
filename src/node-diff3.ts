@@ -58,17 +58,18 @@ export interface Candidate {
 }
 
 // Expects two arrays
-export function LCS<T, TArray extends ArrayLike<T>>(
-  a: TArray,
-  b: TArray,
+export function LCS<T>(
+  a: ArrayLike<T>,
+  b: ArrayLike<T>,
 ): Candidate | undefined {
   // short circuit in case of equality to prevent time-consuming LCS call
-  if (typeof a === 'string') {
+  if (typeof a === 'string' && typeof b === 'string') {
     if (a === b) {
       return undefined;
     }
   } else if (
     Array.isArray(a) &&
+    Array.isArray(b) &&
     a.length === b.length &&
     a.every((val, i) => val === b[i])
   ) {
