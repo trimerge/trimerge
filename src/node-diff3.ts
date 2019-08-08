@@ -6,8 +6,6 @@
 // - Generalized for any array type
 // -
 
-import { jsonEqual } from './json-equal';
-
 interface Range {
   location: number;
   length: number;
@@ -60,7 +58,23 @@ export interface Candidate {
 }
 
 // Expects two arrays
-export function LCS<T>(a: ArrayLike<T>, b: ArrayLike<T>): Candidate {
+export function LCS<T, TArray extends ArrayLike<T>>(
+  a: TArray,
+  b: TArray,
+): Candidate | undefined {
+  // short circuit in case of equality to prevent time-consuming LCS call
+  if (typeof a === 'string') {
+    if (a === b) {
+      return undefined;
+    }
+  } else if (
+    Array.isArray(a) &&
+    a.length === b.length &&
+    a.every((val, i) => val === b[i])
+  ) {
+    return undefined;
+  }
+
   const equivalenceClasses = new Map<T, number[]>();
   for (let j = 0; j < b.length; j++) {
     const line = b[j];
@@ -130,11 +144,6 @@ export function diffIndices<T>(
   a: ArrayLike<T>,
   b: ArrayLike<T>,
 ): DiffIndicesResult[] {
-  // short circuit in case of equality to prevent time-consuming LCS call
-  if (jsonEqual(a, b)) {
-    return [];
-  }
-
   const result: DiffIndicesResult[] = [];
   let tail1 = a.length;
   let tail2 = b.length;
