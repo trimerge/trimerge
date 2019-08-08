@@ -1,4 +1,11 @@
-import { diff3MergeIndices, diffIndices, LCS, makeRange } from './node-diff3';
+import {
+  diff3MergeIndices,
+  diffIndices,
+  diffIndicesLCS,
+  diffIndicesString,
+  LCS,
+  makeRange,
+} from './node-diff3';
 
 describe('diff3MergeIndices', () => {
   it('works with one-sided change', () => {
@@ -108,47 +115,109 @@ describe('diff3MergeIndices', () => {
   });
 });
 
-describe('diffIndices', () => {
-  it('zero to something', () => {
-    expect(diffIndices('', 'hello')).toEqual([
-      { a: makeRange(0, 0), b: makeRange(0, 5) },
+describe.each([diffIndices, diffIndicesLCS, diffIndicesString])(
+  'string diffIndices %p',
+  (diffIndices) => {
+    it('zero to something', () => {
+      expect(diffIndices('', 'hello')).toEqual([
+        { a: makeRange(0, 0), b: makeRange(0, 5) },
+      ]);
+    });
+    it('add in front', () => {
+      expect(diffIndices('word.', 'hello. word.')).toEqual([
+        { a: makeRange(0, 0), b: makeRange(0, 7) },
+      ]);
+    });
+    it('add in back', () => {
+      expect(diffIndices('word.', 'word. bye.')).toEqual([
+        { a: makeRange(5, 0), b: makeRange(5, 5) },
+      ]);
+    });
+    it('replace all', () => {
+      expect(diffIndices('foo', 'bar')).toEqual([
+        { a: makeRange(0, 3), b: makeRange(0, 3) },
+      ]);
+    });
+    it('replace middle', () => {
+      expect(diffIndices('one two three', 'one four three')).toEqual([
+        { a: makeRange(4, 2), b: makeRange(4, 1) },
+        { a: makeRange(7, 0), b: makeRange(6, 2) },
+      ]);
+    });
+    it('delete front', () => {
+      expect(diffIndices('one two three', 'two three')).toEqual([
+        { a: makeRange(0, 4), b: makeRange(0, 0) },
+      ]);
+    });
+    it('delete back', () => {
+      expect(diffIndices('one two three', 'one two')).toEqual([
+        { a: makeRange(7, 6), b: makeRange(7, 0) },
+      ]);
+    });
+    it('delete middle', () => {
+      expect(diffIndices('one two three', 'one three')).toEqual([
+        { a: makeRange(5, 4), b: makeRange(5, 0) },
+      ]);
+    });
+  },
+);
+
+describe('diffIndicesString', () => {
+  function makeString(len: number) {
+    let a = '';
+    while (a.length < len) {
+      a +=
+        'The quick brown fox jumps over the lazy dog.' +
+        ' A man, a plan, a canal, panama.' +
+        ' She sells sea shells by the sea shore. ';
+    }
+    return a.slice(0, len);
+  }
+  it('is performant for equal large string', () => {
+    const a = makeString(200_000);
+    expect(diffIndicesString(a, a)).toEqual([]);
+  });
+  it('is performant for large strings with head diff', () => {
+    const a = makeString(200_000);
+    const b = `***${a}`;
+    expect(diffIndicesString(a, b)).toEqual([
+      {
+        a: makeRange(0, 0),
+        b: makeRange(0, 3),
+      },
     ]);
   });
-  it('add in front', () => {
-    expect(diffIndices('word.', 'hello. word.')).toEqual([
-      { a: makeRange(0, 0), b: makeRange(0, 7) },
+  it('is performant for large strings with tail diff', () => {
+    const a = makeString(200_000);
+    const b = `${a}***`;
+    expect(diffIndicesString(a, b)).toEqual([
+      {
+        a: makeRange(200_000, 0),
+        b: makeRange(200_000, 3),
+      },
     ]);
   });
-  it('add in back', () => {
-    expect(diffIndices('word.', 'word. bye.')).toEqual([
-      { a: makeRange(5, 0), b: makeRange(5, 5) },
-    ]);
+  it('is performant for large strings with scattered changes', () => {
+    const a = makeString(200_000);
+    const delta = 10;
+    const addLocs = [10_000, 20_000, 25_000, 50_000, 75_000];
+    const delLocs = [100_000, 120_000, 121_000, 150_000, 190_000];
+    let b = a;
+    for (let i = delLocs.length - 1; i >= 0; i--) {
+      b = `${b.slice(0, delLocs[i])}${b.slice(delLocs[i] + delta)}`;
+    }
+    for (let i = addLocs.length - 1; i >= 0; i--) {
+      b = `${b.slice(0, addLocs[i])}${'*'.repeat(delta)}${b.slice(addLocs[i])}`;
+    }
+    expect(diffIndicesString(a, b)).toMatchSnapshot();
   });
-  it('replace all', () => {
-    expect(diffIndices('foo', 'bar')).toEqual([
-      { a: makeRange(0, 3), b: makeRange(0, 3) },
-    ]);
-  });
-  it('replace middle', () => {
-    expect(diffIndices('one two three', 'one four three')).toEqual([
-      { a: makeRange(4, 2), b: makeRange(4, 1) },
-      { a: makeRange(7, 0), b: makeRange(6, 2) },
-    ]);
-  });
-  it('delete front', () => {
-    expect(diffIndices('one two three', 'two three')).toEqual([
-      { a: makeRange(0, 4), b: makeRange(0, 0) },
-    ]);
-  });
-  it('delete back', () => {
-    expect(diffIndices('one two three', 'one two')).toEqual([
-      { a: makeRange(7, 6), b: makeRange(7, 0) },
-    ]);
-  });
-  it('delete middle', () => {
-    expect(diffIndices('one two three', 'one three')).toEqual([
-      { a: makeRange(5, 4), b: makeRange(5, 0) },
-    ]);
+  it('is performant for large strings with many changes', () => {
+    const a = makeString(200_000);
+    let b = a;
+    for (let i = 0; i < 200_000; i += 100) {
+      b = `${b.slice(0, i)}*${b.slice(i + 1)}`;
+    }
+    expect(diffIndicesString(a, b)).toBeDefined();
   });
 });
 

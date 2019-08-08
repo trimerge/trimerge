@@ -6,6 +6,8 @@
 // - Generalized for any array type
 // -
 
+import fastDiff from 'fast-diff';
+
 interface Range {
   location: number;
   length: number;
@@ -138,14 +140,61 @@ interface DiffIndicesResult {
   a: Range;
   b: Range;
 }
+
+export function diffIndicesString(a: string, b: string): DiffIndicesResult[] {
+  const diffResult = fastDiff(a, b);
+
+  let aIndex = 0;
+  let bIndex = 0;
+
+  let lastA = 0;
+  let lastB = 0;
+
+  const result: DiffIndicesResult[] = [];
+
+  function flush() {
+    if (aIndex > lastA || bIndex > lastB) {
+      result.push({
+        a: makeRange(lastA, aIndex - lastA),
+        b: makeRange(lastB, bIndex - lastB),
+      });
+    }
+  }
+
+  for (const [type, str] of diffResult) {
+    switch (type) {
+      case fastDiff.EQUAL: {
+        flush();
+        aIndex += str.length;
+        bIndex += str.length;
+        lastA = aIndex;
+        lastB = bIndex;
+        break;
+      }
+      case fastDiff.INSERT: {
+        bIndex += str.length;
+        break;
+      }
+      case fastDiff.DELETE: {
+        aIndex += str.length;
+        break;
+      }
+    }
+  }
+  flush();
+
+  return result;
+}
+
 // We apply the LCS to give a simple representation of the
 // offsets and lengths of mismatched chunks in the input
 // files. This is used by diff3MergeIndices below.
-export function diffIndices<T>(
+export function diffIndicesLCS<T>(
   a: ArrayLike<T>,
   b: ArrayLike<T>,
 ): DiffIndicesResult[] {
   const result: DiffIndicesResult[] = [];
+
   let tail1 = a.length;
   let tail2 = b.length;
 
@@ -169,6 +218,16 @@ export function diffIndices<T>(
 
   result.reverse();
   return result;
+}
+
+export function diffIndices<T>(
+  a: ArrayLike<T>,
+  b: ArrayLike<T>,
+): DiffIndicesResult[] {
+  if (typeof a === 'string' && typeof b === 'string') {
+    return diffIndicesString(a, b);
+  }
+  return diffIndicesLCS(a, b);
 }
 
 // Given three files, A, O, and B, where both A and B are
