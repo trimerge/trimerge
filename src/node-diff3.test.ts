@@ -1,4 +1,11 @@
-import { diff3MergeIndices, diffIndices, LCS, makeRange } from './node-diff3';
+import {
+  diff3MergeIndices,
+  diffIndices,
+  diffIndicesLCS,
+  diffIndicesString,
+  LCS,
+  makeRange,
+} from './node-diff3';
 
 describe('diff3MergeIndices', () => {
   it('works with one-sided change', () => {
@@ -108,49 +115,52 @@ describe('diff3MergeIndices', () => {
   });
 });
 
-describe('diffIndices', () => {
-  it('zero to something', () => {
-    expect(diffIndices('', 'hello')).toEqual([
-      { a: makeRange(0, 0), b: makeRange(0, 5) },
-    ]);
-  });
-  it('add in front', () => {
-    expect(diffIndices('word.', 'hello. word.')).toEqual([
-      { a: makeRange(0, 0), b: makeRange(0, 7) },
-    ]);
-  });
-  it('add in back', () => {
-    expect(diffIndices('word.', 'word. bye.')).toEqual([
-      { a: makeRange(5, 0), b: makeRange(5, 5) },
-    ]);
-  });
-  it('replace all', () => {
-    expect(diffIndices('foo', 'bar')).toEqual([
-      { a: makeRange(0, 3), b: makeRange(0, 3) },
-    ]);
-  });
-  it('replace middle', () => {
-    expect(diffIndices('one two three', 'one four three')).toEqual([
-      { a: makeRange(4, 2), b: makeRange(4, 1) },
-      { a: makeRange(7, 0), b: makeRange(6, 2) },
-    ]);
-  });
-  it('delete front', () => {
-    expect(diffIndices('one two three', 'two three')).toEqual([
-      { a: makeRange(0, 4), b: makeRange(0, 0) },
-    ]);
-  });
-  it('delete back', () => {
-    expect(diffIndices('one two three', 'one two')).toEqual([
-      { a: makeRange(7, 6), b: makeRange(7, 0) },
-    ]);
-  });
-  it('delete middle', () => {
-    expect(diffIndices('one two three', 'one three')).toEqual([
-      { a: makeRange(5, 4), b: makeRange(5, 0) },
-    ]);
-  });
-});
+describe.each([diffIndices, diffIndicesLCS, diffIndicesString])(
+  'string diffIndices %p',
+  (diffIndices) => {
+    it('zero to something', () => {
+      expect(diffIndices('', 'hello')).toEqual([
+        { a: makeRange(0, 0), b: makeRange(0, 5) },
+      ]);
+    });
+    it('add in front', () => {
+      expect(diffIndices('word.', 'hello. word.')).toEqual([
+        { a: makeRange(0, 0), b: makeRange(0, 7) },
+      ]);
+    });
+    it('add in back', () => {
+      expect(diffIndices('word.', 'word. bye.')).toEqual([
+        { a: makeRange(5, 0), b: makeRange(5, 5) },
+      ]);
+    });
+    it('replace all', () => {
+      expect(diffIndices('foo', 'bar')).toEqual([
+        { a: makeRange(0, 3), b: makeRange(0, 3) },
+      ]);
+    });
+    it('replace middle', () => {
+      expect(diffIndices('one two three', 'one four three')).toEqual([
+        { a: makeRange(4, 2), b: makeRange(4, 1) },
+        { a: makeRange(7, 0), b: makeRange(6, 2) },
+      ]);
+    });
+    it('delete front', () => {
+      expect(diffIndices('one two three', 'two three')).toEqual([
+        { a: makeRange(0, 4), b: makeRange(0, 0) },
+      ]);
+    });
+    it('delete back', () => {
+      expect(diffIndices('one two three', 'one two')).toEqual([
+        { a: makeRange(7, 6), b: makeRange(7, 0) },
+      ]);
+    });
+    it('delete middle', () => {
+      expect(diffIndices('one two three', 'one three')).toEqual([
+        { a: makeRange(5, 4), b: makeRange(5, 0) },
+      ]);
+    });
+  },
+);
 
 describe('LCS', () => {
   it('zero to something', () => {
