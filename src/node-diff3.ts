@@ -156,6 +156,7 @@ export function diffIndices<T>(
       });
     }
   }
+
   result.reverse();
   return result;
 }
