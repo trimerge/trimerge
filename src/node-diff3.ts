@@ -6,6 +6,8 @@
 // - Generalized for any array type
 // -
 
+import { jsonEqual } from './json-equal';
+
 interface Range {
   location: number;
   length: number;
@@ -128,6 +130,11 @@ export function diffIndices<T>(
   a: ArrayLike<T>,
   b: ArrayLike<T>,
 ): DiffIndicesResult[] {
+  // short circuit in case of equality to prevent time-consuming LCS call
+  if (jsonEqual(a, b)) {
+    return [];
+  }
+
   const result: DiffIndicesResult[] = [];
   let tail1 = a.length;
   let tail2 = b.length;
@@ -149,7 +156,6 @@ export function diffIndices<T>(
       });
     }
   }
-
   result.reverse();
   return result;
 }
