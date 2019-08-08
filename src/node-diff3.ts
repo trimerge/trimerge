@@ -194,9 +194,6 @@ export function diffIndicesLCS<T>(
 ): DiffIndicesResult[] {
   const result: DiffIndicesResult[] = [];
 
-  if (typeof a === 'string' && typeof b === 'string') {
-  }
-
   let tail1 = a.length;
   let tail2 = b.length;
 
