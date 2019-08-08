@@ -40,39 +40,42 @@ export function trimergeUnorderedMap(
   return newMap;
 }
 
-export function trimergeMap(
-  orig: any,
-  left: any,
-  right: any,
-  path: Path,
-  merge: MergeFn,
-  allowOrderConflicts: boolean = false,
-): Map<any, any> | typeof CannotMerge {
-  if (
-    !(orig instanceof Map) ||
-    !(left instanceof Map) ||
-    !(right instanceof Map)
-  ) {
-    return CannotMerge;
-  }
-  const newMap = new Map<any, any>();
-  diff3Keys(
-    Array.from(orig.keys()),
-    Array.from(left.keys()),
-    Array.from(right.keys()),
-    (key) => {
-      newMap.set(
-        key,
-        merge(
-          orig.get(key),
-          left.get(key),
-          right.get(key),
-          [...path, key],
-          merge,
-        ),
-      );
-    },
-    allowOrderConflicts,
-  );
-  return newMap;
+export function trimergeMapCreator(allowOrderConflicts: boolean): MergeFn {
+  return function trimergeMap(
+    orig: any,
+    left: any,
+    right: any,
+    path: Path,
+    merge: MergeFn,
+  ): Map<any, any> | typeof CannotMerge {
+    if (
+      !(orig instanceof Map) ||
+      !(left instanceof Map) ||
+      !(right instanceof Map)
+    ) {
+      return CannotMerge;
+    }
+    const newMap = new Map<any, any>();
+    diff3Keys(
+      Array.from(orig.keys()),
+      Array.from(left.keys()),
+      Array.from(right.keys()),
+      (key) => {
+        newMap.set(
+          key,
+          merge(
+            orig.get(key),
+            left.get(key),
+            right.get(key),
+            [...path, key],
+            merge,
+          ),
+        );
+      },
+      allowOrderConflicts,
+    );
+    return newMap;
+  };
 }
+
+export const trimergeMap = trimergeMapCreator(false);
