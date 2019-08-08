@@ -162,6 +162,78 @@ describe.each([diffIndices, diffIndicesLCS, diffIndicesString])(
   },
 );
 
+describe('diffIndicesString', () => {
+  function makeString(len: number) {
+    let a = '';
+    while (a.length < len) {
+      a +=
+        'The quick brown fox jumps over the lazy dog.' +
+        ' A man, a plan, a canal, panama.' +
+        ' She sells sea shells by the sea shore. ';
+    }
+    return a.slice(0, len);
+  }
+  it('is performant for equal large string', () => {
+    const a = makeString(200_000);
+    const now = Date.now();
+    expect(diffIndicesString(a, a)).toEqual([]);
+    expect(Date.now() - now).toBeLessThan(10);
+  });
+  it('is performant for large strings with head diff', () => {
+    const a = makeString(200_000);
+    const b = `***${a}`;
+    const now = Date.now();
+    expect(diffIndicesString(a, b)).toEqual([
+      {
+        a: makeRange(0, 0),
+        b: makeRange(0, 3),
+      },
+    ]);
+    expect(Date.now() - now).toBeLessThan(10);
+  });
+  it('is performant for large strings with tail diff', () => {
+    const a = makeString(200_000);
+    const b = `${a}***`;
+    const now = Date.now();
+    expect(diffIndicesString(a, b)).toEqual([
+      {
+        a: makeRange(200_000, 0),
+        b: makeRange(200_000, 3),
+      },
+    ]);
+    expect(Date.now() - now).toBeLessThan(10);
+  });
+  it('is performant for large strings with scattered changes', () => {
+    const a = makeString(200_000);
+    const delta = 10;
+    const addLocs = [10_000, 20_000, 25_000, 50_000, 75_000];
+    const delLocs = [100_000, 120_000, 121_000, 150_000, 190_000];
+    let b = a;
+    for (let i = delLocs.length - 1; i >= 0; i--) {
+      b = `${b.slice(0, delLocs[i])}${b.slice(delLocs[i] + delta)}`;
+    }
+    for (let i = addLocs.length - 1; i >= 0; i--) {
+      b = `${b.slice(0, addLocs[i])}${'*'.repeat(delta)}${b.slice(addLocs[i])}`;
+    }
+
+    const now = Date.now();
+    const res = diffIndicesString(a, b);
+    expect(Date.now() - now).toBeLessThan(500);
+    expect(res).toMatchSnapshot();
+  });
+  it('is performant for large strings with many changes', () => {
+    const a = makeString(200_000);
+    let b = a;
+    for (let i = 0; i < 200_000; i += 100) {
+      b = `${b.slice(0, i)}*${b.slice(i + 1)}`;
+    }
+
+    const now = Date.now();
+    diffIndicesString(a, b);
+    expect(Date.now() - now).toBeLessThan(500);
+  });
+});
+
 describe('LCS', () => {
   it('zero to something', () => {
     expect(LCS('', 'hello')).toEqual({
