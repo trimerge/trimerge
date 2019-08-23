@@ -125,6 +125,19 @@ describe('trimergeMap', () => {
     expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1]]));
     expect(paths).toEqual([[], ['hello']]);
   });
+  it('removes and changes field', () => {
+    const s1 = new Map([['hello', 1], ['world', 2]]);
+    const s2 = new Map([['hello', 1]]);
+    const s3 = new Map([['hello', 1], ['world', 3]]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+    );
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
   it('adds and changes field', () => {
     const s1 = new Map([['hello', 1], ['world', 2]]);
     const s2 = new Map([['hello', 1], ['world', 2], ['there', 2]]);
@@ -268,21 +281,25 @@ describe('trimergeUnorderedMap', () => {
     expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1], ['there', 2]]));
     expect(paths).toEqual([[], ['hello'], ['world'], ['there']]);
   });
+  it('removes and changes field', () => {
+    const s1 = new Map([['hello', 1], ['world', 2]]);
+    const s2 = new Map([['hello', 1]]);
+    const s3 = new Map([['hello', 1], ['world', 3]]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeUnorderedMap,
+    );
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
   it('fails on order conflict', () => {
     const s1 = new Map([['hello', 1], ['world', 1], ['there', 1]]);
     const s2 = new Map([['hello', 1], ['there', 1], ['world', 1]]);
     const s3 = new Map([['there', 1], ['world', 1], ['hello', 1]]);
     const merger = combineMergers(trimergeEquality, trimergeMap);
     expect(() => merger(s1, s2, s3)).toThrowError('order conflict');
-  });
-  it('trimergeMapCreator(true) allows order conflict', () => {
-    const s1 = new Map([['hello', 1], ['world', 1], ['there', 1]]);
-    const s2 = new Map([['hello', 1], ['there', 1], ['world', 1]]);
-    const s3 = new Map([['there', 1], ['world', 1], ['hello', 1]]);
-    const merger = combineMergers(trimergeEquality, trimergeMapCreator(true));
-    expect(merger(s1, s2, s3)).toEqual(
-      new Map([['hello', 1], ['there', 1], ['world', 1]]),
-    );
   });
   it('does not merge if not all Maps 1', () => {
     const s1 = false;
@@ -311,5 +328,16 @@ describe('trimergeUnorderedMap', () => {
     const s3 = false;
     const merger = combineMergers(trimergeUnorderedMap);
     expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
+  });
+});
+describe('trimergeMapCreator', () => {
+  it('trimergeMapCreator(true) allows order conflict', () => {
+    const s1 = new Map([['hello', 1], ['world', 1], ['there', 1]]);
+    const s2 = new Map([['hello', 1], ['there', 1], ['world', 1]]);
+    const s3 = new Map([['there', 1], ['world', 1], ['hello', 1]]);
+    const merger = combineMergers(trimergeEquality, trimergeMapCreator(true));
+    expect(merger(s1, s2, s3)).toEqual(
+      new Map([['hello', 1], ['there', 1], ['world', 1]]),
+    );
   });
 });
