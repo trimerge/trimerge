@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12]
+        node-version: [12.x]
 
     steps:
     - uses: actions/checkout@v1
@@ -25,3 +25,7 @@ jobs:
         npm run build
       env:
         CI: true
+    - uses: primer/publish@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
