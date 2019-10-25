@@ -313,3 +313,20 @@ describe('trimergeUnorderedMap', () => {
     expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
   });
 });
+
+describe('keepUndefinedValues', () => {
+  const trimergeMapRemoveUndefined = trimergeMapCreator(true, false);
+  it('removes undefined value', () => {
+    const s1 = new Map([['hello', 1], ['world', 2]]);
+    const s2 = new Map([['hello', 1], ['world', undefined]]);
+    const s3 = new Map([['hello', 1], ['world', 2]]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMapRemoveUndefined,
+    );
+    expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1]]));
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
+});
