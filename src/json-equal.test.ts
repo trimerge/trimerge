@@ -1,7 +1,11 @@
 import { jsonEqual } from './json-equal';
 
-function func1() {}
-function func2() {}
+function func1() {
+  // empty
+}
+function func2() {
+  // empty
+}
 
 describe('jsonEqual', () => {
   describe('scalars', () => {

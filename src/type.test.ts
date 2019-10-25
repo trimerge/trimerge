@@ -27,7 +27,11 @@ describe('type', () => {
   });
   it('works on functions', () => {
     expect(type(() => {})).toBe('function');
-    expect(type(function() {})).toBe('function');
+    expect(
+      type(function() {
+        // empty
+      }),
+    ).toBe('function');
     expect(type(String.fromCharCode)).toBe('function');
     expect(type(new Function())).toBe('function');
   });
