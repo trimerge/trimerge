@@ -1,6 +1,6 @@
 # Trimerge: Three-way Merge JSON and Structures
 
-[![CircleCI](https://circleci.com/gh/marcello3d/trimerge.svg?style=svg)](https://circleci.com/gh/marcello3d/trimerge)
+[![Actions Status](https://github.com/marcello3d/trimerge/workflows/Node%20CI/badge.svg)](https://github.com/marcello3d/trimerge/actions)
 [![npm version](https://badge.fury.io/js/trimerge.svg)](https://badge.fury.io/js/trimerge)
 [![codecov](https://codecov.io/gh/marcello3d/trimerge/branch/master/graph/badge.svg)](https://codecov.io/gh/marcello3d/trimerge)
 
