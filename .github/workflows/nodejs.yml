@@ -16,16 +16,13 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: npm install
+      - name: Install dependencies from NPM
         run: npm ci
-      - run: npm run lint
-      - name: run tests
+      - name: Run linting
+        run: npm run lint
+      - name: Run tests
         run: |
           npm run test-ci
           npx codecov
-      - run: npm run build
-      - name: publish to NPM
-        uses: primer/publish@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - name: Build package
+        run: npm run build
