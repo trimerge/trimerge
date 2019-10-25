@@ -40,7 +40,10 @@ export function trimergeUnorderedMap(
   return newMap;
 }
 
-export function trimergeMapCreator(allowOrderConflicts: boolean): MergeFn {
+export function trimergeMapCreator(
+  allowOrderConflicts: boolean,
+  keepUndefinedValues: boolean = true,
+): MergeFn {
   return function trimergeMap(
     orig: any,
     left: any,
@@ -61,16 +64,16 @@ export function trimergeMapCreator(allowOrderConflicts: boolean): MergeFn {
       Array.from(left.keys()),
       Array.from(right.keys()),
       (key) => {
-        newMap.set(
-          key,
-          merge(
-            orig.get(key),
-            left.get(key),
-            right.get(key),
-            [...path, key],
-            merge,
-          ),
+        const value = merge(
+          orig.get(key),
+          left.get(key),
+          right.get(key),
+          [...path, key],
+          merge,
         );
+        if (value !== undefined || keepUndefinedValues) {
+          newMap.set(key, value);
+        }
       },
       allowOrderConflicts,
     );
