@@ -46,7 +46,17 @@ export class CannotMergeError extends Error {
   }
 }
 
-export const trimergeEquality = trimergeEqualityCreator((a, b) => a === b);
+export function trimergeEquality(orig: any, left: any, right: any) {
+  // Merging to same thing or only left changed
+  if (left === right || orig === right) {
+    return left;
+  }
+  // Only right changed
+  if (orig === left) {
+    return right;
+  }
+  return CannotMerge;
+}
 
 export function trimergeEqualityCreator(
   equal: (a: any, b: any) => boolean,

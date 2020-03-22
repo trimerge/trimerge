@@ -58,26 +58,44 @@ export function trimergeMapCreator(
     ) {
       return CannotMerge;
     }
-    const newMap = new Map<any, any>();
+    const mergedMap = new Map<any, any>();
+    let leftSame = true;
+    let rightSame = true;
     diff3Keys(
       Array.from(orig.keys()),
       Array.from(left.keys()),
       Array.from(right.keys()),
       (key) => {
-        const value = merge(
+        const leftElement = left.get(key);
+        const rightElement = right.get(key);
+        const merged = merge(
           orig.get(key),
-          left.get(key),
-          right.get(key),
+          leftElement,
+          rightElement,
           [...path, key],
           merge,
         );
-        if (value !== undefined || keepUndefinedValues) {
-          newMap.set(key, value);
+        if (merged !== leftElement) {
+          leftSame = false;
+        }
+        if (merged !== rightElement) {
+          rightSame = false;
+        }
+        if (merged !== undefined || keepUndefinedValues) {
+          mergedMap.set(key, merged);
         }
       },
       allowOrderConflicts,
     );
-    return newMap;
+
+    // Check if result is shallow equal to left or right
+    if (leftSame && left.size === mergedMap.size) {
+      return left;
+    }
+    if (rightSame && right.size === mergedMap.size) {
+      return right;
+    }
+    return mergedMap;
   };
 }
 

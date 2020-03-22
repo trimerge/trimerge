@@ -30,10 +30,10 @@ describe('trimergeMap', () => {
       trimergeEquality,
       trimergeMap,
     );
-    expect(merger(s1, s2, s3)).toEqual(
-      new Map([['hello', 1], ['world', 2], ['there', 3]]),
-    );
+    expect(merger(s1, s2, s3)).toBe(s2);
     expect(paths).toEqual([[], ['hello'], ['world'], ['there']]);
+    // try reverse
+    expect(merger(s1, s3, s2)).toBe(s2);
   });
   it('adds two fields', () => {
     const s1 = new Map([['hello', 1], ['world', 2]]);
@@ -49,6 +49,11 @@ describe('trimergeMap', () => {
       new Map([['hello', 1], ['world', 2], ['there', 3], ['here', 4]]),
     );
     expect(paths).toEqual([[], ['hello'], ['world'], ['there'], ['here']]);
+
+    // try reverse
+    expect(merger(s1, s3, s2)).toEqual(
+      new Map([['hello', 1], ['world', 2], ['there', 3], ['here', 4]]),
+    );
   });
   it('changes field', () => {
     const s1 = new Map([['hello', 1], ['world', 2]]);
@@ -60,8 +65,10 @@ describe('trimergeMap', () => {
       trimergeEquality,
       trimergeMap,
     );
-    expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1], ['world', 3]]));
+    expect(merger(s1, s2, s3)).toBe(s3);
     expect(paths).toEqual([[], ['hello'], ['world']]);
+    // try reverse
+    expect(merger(s1, s3, s2)).toBe(s3);
   });
   it('moves field 1', () => {
     const s1 = new Map([['hello', 1], ['world', 2]]);
@@ -319,14 +326,14 @@ describe('keepUndefinedValues', () => {
   it('removes undefined value', () => {
     const s1 = new Map([['hello', 1], ['world', 2]]);
     const s2 = new Map([['hello', 1], ['world', undefined]]);
-    const s3 = new Map([['hello', 1], ['world', 2]]);
+    const s3 = new Map([['hello', undefined], ['world', 2]]);
     const paths: Path[] = [];
     const merger = combineMergers(
       mockPathTrackingMerger(paths),
       trimergeEquality,
       trimergeMapRemoveUndefined,
     );
-    expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1]]));
+    expect(merger(s1, s2, s3)).toEqual(new Map([]));
     expect(paths).toEqual([[], ['hello'], ['world']]);
   });
 });
