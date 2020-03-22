@@ -4,7 +4,7 @@ import { CannotMerge } from './cannot-merge';
 import { MergeFn } from './trimerge';
 import { jsSameType } from './js-same-type';
 
-export function trimergeJsObject(
+export function trimergeObject(
   orig: any = {},
   left: any,
   right: any,

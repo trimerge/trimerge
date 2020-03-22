@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { combineMergers } from './trimerge';
-import { trimergeJsObject } from './trimerge-js-object';
+import { trimergeObject } from './trimerge-object';
 import { trimergeString } from './trimerge-string';
 import { routeMergers } from './trimerge-router';
-import { trimergeArrayCreator } from './trimerge-js-array';
+import { trimergeArrayCreator } from './trimerge-array';
 import { trimergeJsonDeepEqual } from './trimerge-json-equal';
 
 describe('works with complex structure', () => {
@@ -37,7 +37,7 @@ describe('works with complex structure', () => {
       [['title'], trimergeString],
       [['canvas', 'shapes'], trimergeArrayCreator((item: Shape) => item.key)],
     ),
-    trimergeJsObject,
+    trimergeObject,
   );
 
   it('merges string edit', () => {

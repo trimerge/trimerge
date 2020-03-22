@@ -1,5 +1,5 @@
 import { CannotMergeError, combineMergers, trimergeEquality } from './trimerge';
-import { trimergeArrayCreator } from './trimerge-js-array';
+import { trimergeArrayCreator } from './trimerge-array';
 import { trimergeJsonDeepEqual } from './trimerge-json-equal';
 
 describe('trimergeArrayCreator', () => {

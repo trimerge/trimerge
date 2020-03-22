@@ -9,7 +9,11 @@ export {
   CannotMergeError,
   MergeFn,
 } from './trimerge';
-export { trimergeJsObject } from './trimerge-js-object';
+export {
+  trimergeObject,
+  /** @deprecated */
+  trimergeObject as trimergeJsonObject,
+} from './trimerge-object';
 export {
   routeMergers,
   RouteWildCard,
@@ -35,5 +39,5 @@ export {
 } from './node-diff3';
 export { diff3MergeStringRanges } from './diff3-string';
 export { diff3Keys } from './diff3-keys';
-export { trimergeArrayCreator } from './trimerge-js-array';
+export { trimergeArrayCreator } from './trimerge-array';
 export { trimergeJsonDeepEqual } from './trimerge-json-equal';
