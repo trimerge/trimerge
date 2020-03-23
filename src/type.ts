@@ -1,6 +1,16 @@
+type TypeofString =
+  | 'string'
+  | 'number'
+  | 'bigint'
+  | 'boolean'
+  | 'symbol'
+  | 'undefined'
+  | 'object'
+  | 'function';
+
 export function type(
   object: any,
-): typeof object | 'instance' | 'array' | 'null' {
+): TypeofString | 'instance' | 'array' | 'null' {
   const t = typeof object;
   if (t !== 'object') {
     return t;

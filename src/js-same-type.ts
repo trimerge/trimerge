@@ -5,12 +5,12 @@ export function jsSameType(
   orig: any,
   left: any,
   right: any,
-): typeof orig | 'array' | 'null' | typeof CannotMerge {
-  const typeo = type(orig);
-  const typea = type(left);
-  const typeb = type(right);
-  if (typea !== typeb || typea !== typeo) {
+): ReturnType<typeof type> | typeof CannotMerge {
+  const origType = type(orig);
+  const leftType = type(left);
+  const rightType = type(right);
+  if (leftType !== rightType || leftType !== origType) {
     return CannotMerge;
   }
-  return typea;
+  return leftType;
 }

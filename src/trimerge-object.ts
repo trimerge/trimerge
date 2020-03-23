@@ -21,8 +21,8 @@ export function trimergeObject(
   const keys = new Set<string>(origKeys);
   leftKeys.forEach(keys.add, keys);
   rightKeys.forEach(keys.add, keys);
-  let leftSame = true; //leftKeys.length === keys.size;
-  let rightSame = true; //rightKeys.length === keys.size;
+  let leftSame = true;
+  let rightSame = true;
   let count = 0;
   keys.forEach((key) => {
     const leftElement = left[key];

@@ -1,6 +1,6 @@
 import { MergeFn } from './trimerge';
 import { Path } from './path';
-import { JSONObject, JSONValue } from './json';
+import { JSONValue } from './json';
 import { CannotMerge } from './cannot-merge';
 import { diff3Keys } from './diff3-keys';
 import { jsSameType } from './js-same-type';
@@ -21,9 +21,9 @@ export function trimergeArrayCreator(
     if (jsSameType(orig, left, right) !== 'array') {
       return CannotMerge;
     }
-    const origMap: JSONObject = {};
-    const leftMap: JSONObject = {};
-    const rightMap: JSONObject = {};
+    const origMap: Record<string, any> = {};
+    const leftMap: Record<string, any> = {};
+    const rightMap: Record<string, any> = {};
     const origKeys = orig.map((item, index): string => {
       const key = getArrayItemKey(item, index, path);
       if (key in origMap) {
@@ -57,19 +57,19 @@ export function trimergeArrayCreator(
       leftKeys,
       rightKeys,
       (key) => {
-        const leftElement = leftMap[key];
-        const rightElement = rightMap[key];
         const merged = mergeFn(
           origMap[key],
-          leftElement,
-          rightElement,
+          leftMap[key],
+          rightMap[key],
           [...path, key],
           mergeFn,
         );
-        if (merged !== left[mergedArray.length]) {
+        // Compare merge result with same array index in left
+        if (leftSame && merged !== left[mergedArray.length]) {
           leftSame = false;
         }
-        if (merged !== right[mergedArray.length]) {
+        // Compare merge result with same array index in right
+        if (rightSame && merged !== right[mergedArray.length]) {
           rightSame = false;
         }
         mergedArray.push(merged);
