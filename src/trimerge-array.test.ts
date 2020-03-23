@@ -148,7 +148,10 @@ describe('trimergeArrayCreator', () => {
       { id: 2, value: 2 },
       { id: 3, value: 3 },
     ];
-    const state2 = [{ id: 2, value: 10 }, { id: 3, value: 3 }];
+    const state2 = [
+      { id: 2, value: 10 },
+      { id: 3, value: 3 },
+    ];
     const state3 = [
       { id: 1, value: 1 },
       { id: 2, value: 2 },
@@ -161,6 +164,19 @@ describe('trimergeArrayCreator', () => {
       { id: 4, value: 4 },
     ]);
   });
+  it('removes and changes field in id array', () => {
+    const s1 = [
+      { id: 'hello', value: 1 },
+      { id: 'world', value: 2 },
+    ];
+    const s2 = [{ id: 'hello', value: 1 }];
+    const s3 = [
+      { id: 'hello', value: 1 },
+      { id: 'world', value: 3 },
+    ];
+    expect(() => idArrayMerge(s1, s2, s3)).toThrowError(CannotMergeError);
+  });
+
   it('fails on duplicate array keys 1', () => {
     const state1 = [1, 2, 4, 5, 6, 2];
     const state2 = [1, 5, 2, 4, 6];
