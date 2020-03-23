@@ -1,6 +1,6 @@
 import { routeMergers, RouteWildCard } from './trimerge-router';
 import { combineMergers, trimergeEquality } from './trimerge';
-import { trimergeJsonObject } from './trimerge-json';
+import { trimergeObject } from './trimerge-object';
 
 describe('routeMergers() can build', () => {
   it('no routes', () => {
@@ -58,7 +58,7 @@ describe('routeMergers() merges', () => {
     const merger = combineMergers(
       routeMergers([['hello'], mockedMergeLeft]),
       trimergeEquality,
-      trimergeJsonObject,
+      trimergeObject,
       mergeLeft,
     );
     const s1 = { hello: true, world: true };
@@ -75,7 +75,7 @@ describe('routeMergers() merges', () => {
     const merger = combineMergers(
       routeMergers([[], mockedMergeLeft]),
       trimergeEquality,
-      trimergeJsonObject,
+      trimergeObject,
       mergeLeft,
     );
     const s1 = { hello: true, world: true };
@@ -90,7 +90,7 @@ describe('routeMergers() merges', () => {
     const merger = combineMergers(
       routeMergers([[RouteWildCard], mockedMergeLeft]),
       trimergeEquality,
-      trimergeJsonObject,
+      trimergeObject,
       mergeLeft,
     );
     const s1 = { hello: true, world: true };
@@ -112,7 +112,7 @@ describe('routeMergers() merges', () => {
         [[RouteWildCard], mockedMergeLeft2],
       ),
       trimergeEquality,
-      trimergeJsonObject,
+      trimergeObject,
       mergeLeft,
     );
     const s1 = { hello: true, world: true };

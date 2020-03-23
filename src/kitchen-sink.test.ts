@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { combineMergers } from './trimerge';
-import {
-  trimergeArrayCreator,
-  trimergeJsonDeepEqual,
-  trimergeJsonObject,
-} from './trimerge-json';
+import { trimergeObject } from './trimerge-object';
 import { trimergeString } from './trimerge-string';
 import { routeMergers } from './trimerge-router';
+import { trimergeArrayCreator } from './trimerge-array';
+import { trimergeJsonDeepEqual } from './trimerge-json-equal';
 
 describe('works with complex structure', () => {
   type ShapeEnum = 'ellipse' | 'rect';
@@ -39,7 +37,7 @@ describe('works with complex structure', () => {
       [['title'], trimergeString],
       [['canvas', 'shapes'], trimergeArrayCreator((item: Shape) => item.key)],
     ),
-    trimergeJsonObject,
+    trimergeObject,
   );
 
   it('merges string edit', () => {

@@ -26,8 +26,13 @@ describe('type', () => {
     expect(type(null)).toBe('null');
   });
   it('works on functions', () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     expect(type(() => {})).toBe('function');
-    expect(type(function() {})).toBe('function');
+    expect(
+      type(function () {
+        // empty
+      }),
+    ).toBe('function');
     expect(type(String.fromCharCode)).toBe('function');
     expect(type(new Function())).toBe('function');
   });
