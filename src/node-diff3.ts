@@ -4,7 +4,6 @@
 // - Migrated to TypeScript, use let/const
 // - Removed unused functions
 // - Generalized for any array type
-// -
 
 import fastDiff from 'fast-diff';
 
