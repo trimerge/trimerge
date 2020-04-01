@@ -46,7 +46,7 @@ export function trimergeArrayCreator(
         path,
         mergeFn,
         allowOrderConflicts,
-        (_, merged) => mergedArray.push(merged),
+        (_key, merged) => mergedArray.push(merged),
       )
     ) {
       case 'left':

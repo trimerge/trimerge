@@ -72,7 +72,9 @@
     "testEnvironment": "node",
     "globals": {
       "ts-jest": {
-        "diagnostics": false
+        "diagnostics": {
+          "warnOnly": true
+        }
       }
     }
   }
