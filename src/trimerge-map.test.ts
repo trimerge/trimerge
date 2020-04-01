@@ -135,7 +135,7 @@ describe('trimergeMap', () => {
         ['hello', 1],
       ]),
     );
-    expect(paths).toEqual([[], ['world'], ['hello']]);
+    expect(paths).toEqual([[], ['hello'], ['world']]);
   });
   it('moves field 2', () => {
     const s1 = new Map([
@@ -178,7 +178,7 @@ describe('trimergeMap', () => {
         ['f', 6],
       ]),
     );
-    expect(paths).toEqual([[], ['e'], ['b'], ['c'], ['d'], ['a'], ['f']]);
+    expect(paths).toEqual([[], ['a'], ['e'], ['b'], ['c'], ['d'], ['f']]);
   });
   it('removes field', () => {
     const s1 = new Map([
@@ -197,8 +197,75 @@ describe('trimergeMap', () => {
       trimergeMap,
     );
     expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 1]]));
-    expect(paths).toEqual([[], ['hello']]);
+    expect(paths).toEqual([[], ['hello'], ['world']]);
   });
+
+  it('handles both remove', () => {
+    const s1 = new Map([
+      ['x', 1],
+      ['y', 2],
+      ['z', 3],
+    ]);
+    const s2 = new Map([['y', 2]]);
+    const s3 = new Map([
+      ['x', 1],
+      ['y', 2],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+    );
+    expect(merger(s1, s2, s3)).toEqual(new Map([['y', 2]]));
+  });
+
+  it('handles double remove', () => {
+    const s1 = new Map([
+      ['x', 1],
+      ['y', 2],
+      ['z', 3],
+    ]);
+    const s2 = new Map([
+      ['y', 2],
+      ['z', 3],
+    ]);
+    const s3 = new Map([
+      ['x', 1],
+      ['y', 2],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+    );
+    expect(merger(s1, s2, s3)).toEqual(new Map([['y', 2]]));
+  });
+
+  it('handles double remove at end', () => {
+    const s1 = new Map([
+      ['x', 1],
+      ['y', 2],
+      ['z', 3],
+    ]);
+    const s2 = new Map([
+      ['x', 1],
+      ['y', 2],
+    ]);
+    const s3 = new Map([
+      ['x', 1],
+      ['z', 3],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+    );
+    expect(merger(s1, s2, s3)).toEqual(new Map([['x', 1]]));
+  });
+
   it('removes and changes field', () => {
     const s1 = new Map([
       ['hello', 1],
@@ -216,6 +283,71 @@ describe('trimergeMap', () => {
       trimergeMap,
     );
     expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
+  it('removes and changes field, force delete', () => {
+    const s1 = new Map([
+      ['hello', 1],
+      ['world', 2],
+    ]);
+    const s2 = new Map([['hello', 1]]);
+    const s3 = new Map([
+      ['hello', 1],
+      ['world', 3],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+      () => undefined,
+    );
+    expect(merger(s1, s2, s3)).toBe(s2);
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
+  it('removes and changes field, force keep', () => {
+    const s1 = new Map([
+      ['hello', 1],
+      ['world', 2],
+    ]);
+    const s2 = new Map([['hello', 1]]);
+    const s3 = new Map([
+      ['hello', 1],
+      ['world', 3],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+      (_, l, r) => l ?? r,
+    );
+    expect(merger(s1, s2, s3)).toBe(s3);
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
+  it('removes and changes field, return new value', () => {
+    const s1 = new Map([
+      ['hello', 1],
+      ['world', 2],
+    ]);
+    const s2 = new Map([['hello', 1]]);
+    const s3 = new Map([
+      ['hello', 1],
+      ['world', 3],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+      () => 'hahaha, conflict!',
+    );
+    expect(merger(s1, s2, s3)).toEqual(
+      new Map<string, any>([
+        ['hello', 1],
+        ['world', 'hahaha, conflict!'],
+      ]),
+    );
     expect(paths).toEqual([[], ['hello'], ['world']]);
   });
   it('adds and changes field', () => {
@@ -270,7 +402,7 @@ describe('trimergeMap', () => {
         ['there', 2],
       ]),
     );
-    expect(paths).toEqual([[], ['hello'], ['there']]);
+    expect(paths).toEqual([[], ['hello'], ['world'], ['there']]);
   });
   it('does not merge if not all Maps 1', () => {
     const s1 = false;
@@ -556,11 +688,7 @@ describe('trimergeMapCreator', () => {
       ]),
     );
   });
-});
-
-describe('keepUndefinedValues', () => {
-  const trimergeMapRemoveUndefined = trimergeMapCreator(true, false);
-  it('removes undefined value', () => {
+  it('keeps undefined values', () => {
     const s1 = new Map([
       ['hello', 1],
       ['world', 2],
@@ -577,9 +705,41 @@ describe('keepUndefinedValues', () => {
     const merger = combineMergers(
       mockPathTrackingMerger(paths),
       trimergeEquality,
-      trimergeMapRemoveUndefined,
+      trimergeMap,
     );
-    expect(merger(s1, s2, s3)).toEqual(new Map([]));
+    expect(merger(s1, s2, s3)).toEqual(
+      new Map([
+        ['hello', undefined],
+        ['world', undefined],
+      ]),
+    );
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
+  it('keeps undefined values', () => {
+    const s1 = new Map([
+      ['hello', 1],
+      ['world', 2],
+    ]);
+    const s2 = new Map([
+      ['hello', 1],
+      ['world', undefined],
+    ]);
+    const s3 = new Map([
+      ['hello', 2],
+      ['world', undefined],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+    );
+    expect(merger(s1, s2, s3)).toEqual(
+      new Map([
+        ['hello', 2],
+        ['world', undefined],
+      ]),
+    );
     expect(paths).toEqual([[], ['hello'], ['world']]);
   });
 });

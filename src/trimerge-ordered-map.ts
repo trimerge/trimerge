@@ -1,115 +1,146 @@
-import { diff3MergeIndices, Index, upperBound } from './node-diff3';
+import { diff3Keys } from './diff3-keys';
 import { MergeFn } from './trimerge';
 import { Path } from './path';
+import { diffIndices } from './node-diff3';
 
-export function trimergeOrderedMap<K, V>(
+export function internalTrimergeOrderedMap<K, V>(
   origMap: Map<K, V>,
   leftMap: Map<K, V>,
   rightMap: Map<K, V>,
   path: Path,
   mergeFn: MergeFn,
   allowOrderConflicts: boolean,
-  callback: (key: K, value: V) => void,
-): { leftSame: boolean; rightSame: boolean } {
-  const allKeys = new Set(leftMap.keys());
+  callback: (key: K, value: V | undefined) => void,
+): 'left' | 'right' | undefined {
+  const leftRightKeys = new Set(leftMap.keys());
   for (const key of rightMap.keys()) {
-    allKeys.add(key);
+    leftRightKeys.add(key);
   }
+
+  // Merge all values first (might restore some deleted values)
   const mergedValues = new Map<K, V>();
-  const restoredAfterLeftDeleted = new Set<K>();
-  const restoredAfterRightDeleted = new Set<K>();
-  for (const key of allKeys) {
-    const inLeft = leftMap.has(key);
-    const inRight = rightMap.has(key);
-    if (!inLeft && !inRight) {
-      continue;
-    }
+  const restoredInLeft = new Set<K>();
+  const restoredInRight = new Set<K>();
+  for (const key of leftRightKeys) {
+    const left = leftMap.get(key);
+    const right = rightMap.get(key);
     const merged = mergeFn(
       origMap.get(key),
-      leftMap.get(key),
-      rightMap.get(key),
+      left,
+      right,
       [...path, key as any],
       mergeFn,
     );
-
-    if (origMap.has(key)) {
+    const inLeft = leftMap.has(key);
+    const inRight = rightMap.has(key);
+    if (
+      merged !== undefined ||
+      (inLeft && left === undefined) ||
+      (inRight && right === undefined)
+    ) {
       if (!inLeft) {
-        restoredAfterLeftDeleted.add(key);
+        restoredInLeft.add(key);
       } else if (!inRight) {
-        restoredAfterRightDeleted.add(key);
+        restoredInRight.add(key);
       }
+      mergedValues.set(key, merged);
     }
-    mergedValues.set(key, merged);
   }
   const orig = Array.from(origMap.keys());
-  const left = Array.from(leftMap.keys());
-  const right = Array.from(rightMap.keys());
-  const indices = diff3MergeIndices(orig, left, right);
-  const seenKeys = new Set<K>();
+  const left = restoreKeys(orig, leftMap, restoredInLeft);
+  const right = restoreKeys(orig, rightMap, restoredInRight);
   let leftSame = true;
   let rightSame = true;
-  function emit(key: K) {
-    if (seenKeys.has(key)) {
-      if (!allowOrderConflicts) {
-        throw new Error('order conflict');
-      }
-    } else {
-      seenKeys.add(key);
-      const value = mergedValues.get(key);
-
-      const leftElement = leftMap.get(key);
-      const rightElement = rightMap.get(key);
-      if (value !== leftElement) {
-        leftSame = false;
-      }
-      if (value !== rightElement) {
-        rightSame = false;
-      }
-      if (value !== undefined) {
-        callback(key, value);
-      }
-    }
-  }
-  for (let i = 0; i < indices.length; i++) {
-    const index: Index = indices[i];
-    if (index.type === 'conflict') {
-      const leftStart = index.aRange.location;
-      const leftEnd = upperBound(index.aRange);
-      const origStart = index.oRange.location;
-      const origEnd = upperBound(index.oRange);
-      const rightStart = index.bRange.location;
-      const rightEnd = upperBound(index.bRange);
-
-      const rightSlice = new Set<K>();
-      for (let i = rightStart; i < rightEnd; i++) {
-        rightSlice.add(right[i]);
-      }
-      const origSlice = new Set<K>();
-      for (let i = origStart; i < origEnd; i++) {
-        origSlice.add(orig[i]);
-      }
-      for (let j = leftStart; j < leftEnd; j++) {
-        const key = left[j];
-        if (rightSlice.has(key) || !origSlice.has(key)) {
-          emit(key);
+  const leftIterator = leftMap.entries();
+  const rightIterator = rightMap.entries();
+  diff3Keys(
+    orig,
+    left,
+    right,
+    (key) => {
+      const merged = mergedValues.get(key);
+      if (leftSame) {
+        const left = leftIterator.next().value;
+        if (!left || key !== left[0] || merged !== left[1]) {
+          leftSame = false;
         }
       }
-      for (let j = rightStart; j < rightEnd; j++) {
-        const key = right[j];
-        // Added by right
-        if (!origSlice.has(key)) {
-          emit(key);
+      if (rightSame) {
+        const right = rightIterator.next().value;
+        if (!right || key !== right[0] || merged !== right[1]) {
+          rightSame = false;
         }
       }
-    } else {
-      const start = index.type === 'okA' ? index.aIndex : index.bIndex;
-      const arr = index.type === 'okA' ? left : right;
-      const end = start + index.length;
-      for (let j = start; j < end; j++) {
-        emit(arr[j]);
-      }
+      callback(key, merged);
+    },
+    allowOrderConflicts,
+  );
+  if (leftSame && leftIterator.next().done) {
+    return 'left';
+  }
+  if (rightSame && rightIterator.next().done === true) {
+    return 'right';
+  }
+  return undefined;
+}
+
+type SetOrMap<T> = ReadonlySet<T> | ReadonlyMap<T, any>;
+
+/**
+ * This function is used to get a version of B that has certain items restored
+ * This is use by internalTrimergeOrderedMap to handle the scenario
+ */
+export function restoreKeys<T>(
+  aArray: readonly T[],
+  bMap: SetOrMap<T>,
+  keys: SetOrMap<T>,
+): readonly T[] {
+  const bArray = Array.from(bMap.keys());
+  if (keys.size === 0) {
+    return bArray;
+  }
+  // check if B is missing any keys:
+  let keyDeleted = false;
+  for (const item of keys.keys()) {
+    if (!bMap.has(item)) {
+      keyDeleted = true;
+      break;
     }
   }
+  if (!keyDeleted) {
+    // B doesn't delete any of the keys
+    return bArray;
+  }
 
-  return { leftSame, rightSame };
+  // Otherwise we need build a new B that inserts the missing keys as close to
+  // their original locations as possible
+  const newB: T[] = [];
+  let bEnd = 0;
+  for (const diff of diffIndices(aArray, bArray)) {
+    const bStart = diff.b.location;
+    if (bEnd < bStart) {
+      // Add beginning of B (no edits)
+      newB.push(...bArray.slice(bEnd, bStart));
+    }
+
+    // Add keys from A that were deleted in B
+    const aStart = diff.a.location;
+    const aEnd = aStart + diff.a.length;
+    for (let i = aStart; i < aEnd; i++) {
+      const item = aArray[i];
+      if (keys.has(item) && !bMap.has(item)) {
+        // Key was in A, but deleted in B
+        newB.push(item);
+      }
+    }
+
+    // Add diffed keys from B
+    bEnd = bStart + diff.b.length;
+    newB.push(...bArray.slice(bStart, bEnd));
+  }
+  if (bEnd < bArray.length) {
+    // Add end of B
+    newB.push(...bArray.slice(bEnd));
+  }
+  return newB;
 }

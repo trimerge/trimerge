@@ -1,8 +1,7 @@
 import { MergeFn } from './trimerge';
 import { Path } from './path';
-import { JSONValue } from './json';
 import { CannotMerge } from './cannot-merge';
-import { trimergeOrderedMap } from './trimerge-ordered-map';
+import { internalTrimergeOrderedMap } from './trimerge-ordered-map';
 import { jsSameType } from './js-same-type';
 
 type ArrayKeyFn = (item: any, index: number, arrayPath: Path) => string;
@@ -17,7 +16,7 @@ export function trimergeArrayCreator(
     right: any[],
     path: Path,
     mergeFn: MergeFn,
-  ): JSONValue[] | typeof CannotMerge => {
+  ): any[] | typeof CannotMerge => {
     if (jsSameType(orig, left, right) !== 'array') {
       return CannotMerge;
     }
@@ -38,39 +37,24 @@ export function trimergeArrayCreator(
     const leftMap = arrayToMap(left);
     const rightMap = arrayToMap(right);
 
-
-    const mergedArray: JSONValue[] = [];
-    let leftSame = true;
-    let rightSame = true;
-    trimergeOrderedMap(
-      origMap,
-      leftMap,
-      rightMap,
-      path,
-      mergeFn,
-      allowOrderConflicts,
-      (_, merged) => {
-        // Compare merge result with same array index in left
-        if (leftSame && merged !== left[mergedArray.length]) {
-          leftSame = false;
-        }
-        // Compare merge result with same array index in right
-        if (rightSame && merged !== right[mergedArray.length]) {
-          rightSame = false;
-        }
-        if (merged !== undefined) {
-          mergedArray.push(merged);
-        }
-      },
-    );
-
-    // Check if result is shallow equal to left or right
-    if (leftSame && left.length === mergedArray.length) {
-      return left;
+    const mergedArray: any[] = [];
+    switch (
+      internalTrimergeOrderedMap(
+        origMap,
+        leftMap,
+        rightMap,
+        path,
+        mergeFn,
+        allowOrderConflicts,
+        (_, merged) => mergedArray.push(merged),
+      )
+    ) {
+      case 'left':
+        return left;
+      case 'right':
+        return right;
+      default:
+        return mergedArray;
     }
-    if (rightSame && right.length === mergedArray.length) {
-      return right;
-    }
-    return mergedArray;
   };
 }
