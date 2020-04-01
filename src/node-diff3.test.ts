@@ -113,6 +113,33 @@ describe('diff3MergeIndices', () => {
       },
     ]);
   });
+  it('captures delete', () => {
+    expect(diff3MergeIndices(['a', 'b'], ['a'], ['a', 'b'])).toEqual([
+      {
+        aIndex: 0,
+        bIndex: 0,
+        length: 1,
+        oIndex: 0,
+        type: 'okA',
+      },
+    ]);
+  });
+  it('captures delete 2', () => {
+    expect(diff3MergeIndices(['a', 'b'], ['b', 'a'], ['a', 'b'])).toEqual([
+      {
+        aIndex: 0,
+        bIndex: 1,
+        length: 1,
+        oIndex: 1,
+        type: 'okA',
+      },
+      {
+        aIndex: 1,
+        length: 1,
+        type: 'okA',
+      },
+    ]);
+  });
 });
 
 describe.each([diffIndices, diffIndicesLCS, diffIndicesString])(

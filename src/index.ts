@@ -38,6 +38,6 @@ export {
   diff3MergeIndices,
 } from './node-diff3';
 export { diff3MergeStringRanges } from './diff3-string';
-export { diff3Keys } from './diff3-keys';
+export { trimergeOrderedMap } from './trimerge-ordered-map';
 export { trimergeArrayCreator } from './trimerge-array';
 export { trimergeJsonDeepEqual } from './trimerge-json-equal';

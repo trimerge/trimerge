@@ -164,7 +164,50 @@ describe('trimergeArrayCreator', () => {
       { id: 4, value: 4 },
     ]);
   });
-  it('removes and changes field in id array', () => {
+  it('handles remove and change in id array with removing fallback', () => {
+    const s1 = [
+      { id: 'hello', value: 1 },
+      { id: 'world', value: 2 },
+    ];
+    const s2 = [{ id: 'hello', value: 1 }];
+    const s3 = [
+      { id: 'hello', value: 1 },
+      { id: 'world', value: 3 },
+    ];
+    const merger = combineMergers(
+      trimergeJsonDeepEqual,
+      trimergeArrayCreator((item: any) => String(item.id)),
+      // Always remove when conflicting
+      (_, left, right) =>
+        left !== undefined && right !== undefined ? left : undefined,
+    );
+
+    expect(merger(s1, s2, s3)).toEqual([{ id: 'hello', value: 1 }]);
+  });
+  it('handles remove and change in id array with keeping fallback', () => {
+    const s1 = [
+      { id: 'hello', value: 1 },
+      { id: 'world', value: 2 },
+    ];
+    const s2 = [{ id: 'hello', value: 1 }];
+    const s3 = [
+      { id: 'hello', value: 1 },
+      { id: 'world', value: 3 },
+    ];
+    const merger = combineMergers(
+      trimergeJsonDeepEqual,
+      trimergeArrayCreator((item: any) => String(item.id)),
+      // Always keep when conflicting
+      (_, left, right) => left ?? right,
+    );
+
+    expect(merger(s1, s2, s3)).toEqual([
+      { id: 'hello', value: 1 },
+      { id: 'world', value: 3 },
+    ]);
+  });
+
+  it('fails on removes and changes field in id array', () => {
     const s1 = [
       { id: 'hello', value: 1 },
       { id: 'world', value: 2 },

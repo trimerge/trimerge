@@ -1,7 +1,7 @@
 import { Path, PathKey } from './path';
 import { CannotMerge } from './cannot-merge';
 import { MergeFn } from './trimerge';
-import { diff3Keys } from './diff3-keys';
+import { trimergeOrderedMap } from './trimerge-ordered-map';
 
 function* iterateKeys<K>(...maps: Map<K, any>[]): IterableIterator<K> {
   for (const map of maps) {
@@ -49,7 +49,7 @@ export function trimergeMapCreator(
     left: any,
     right: any,
     path: Path,
-    merge: MergeFn,
+    mergeFn: MergeFn,
   ): Map<any, any> | typeof CannotMerge {
     if (
       !(orig instanceof Map) ||
@@ -59,35 +59,19 @@ export function trimergeMapCreator(
       return CannotMerge;
     }
     const mergedMap = new Map<any, any>();
-    let leftSame = true;
-    let rightSame = true;
-    diff3Keys(
-      Array.from(orig.keys()),
-      Array.from(left.keys()),
-      Array.from(right.keys()),
-      (key) => {
-        const leftElement = left.get(key);
-        const rightElement = right.get(key);
-        const merged = merge(
-          orig.get(key),
-          leftElement,
-          rightElement,
-          [...path, key],
-          merge,
-        );
-        if (merged !== leftElement) {
-          leftSame = false;
-        }
-        if (merged !== rightElement) {
-          rightSame = false;
-        }
+    const { leftSame, rightSame } = trimergeOrderedMap(
+      orig,
+      left,
+      right,
+      path,
+      mergeFn,
+      allowOrderConflicts,
+      (key, merged) => {
         if (merged !== undefined || keepUndefinedValues) {
           mergedMap.set(key, merged);
         }
       },
-      allowOrderConflicts,
     );
-
     // Check if result is shallow equal to left or right
     if (leftSame && left.size === mergedMap.size) {
       return left;
