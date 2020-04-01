@@ -688,7 +688,7 @@ describe('trimergeMapCreator', () => {
       ]),
     );
   });
-  it('keeps undefined values', () => {
+  it('removes undefined values', () => {
     const s1 = new Map([
       ['hello', 1],
       ['world', 2],
@@ -707,15 +707,11 @@ describe('trimergeMapCreator', () => {
       trimergeEquality,
       trimergeMap,
     );
-    expect(merger(s1, s2, s3)).toEqual(
-      new Map([
-        ['hello', undefined],
-        ['world', undefined],
-      ]),
-    );
+    expect(merger(s1, s2, s3)).toEqual(new Map([]));
     expect(paths).toEqual([[], ['hello'], ['world']]);
   });
-  it('keeps undefined values', () => {
+
+  it('removes undefined values 2', () => {
     const s1 = new Map([
       ['hello', 1],
       ['world', 2],
@@ -734,12 +730,55 @@ describe('trimergeMapCreator', () => {
       trimergeEquality,
       trimergeMap,
     );
+    expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 2]]));
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
+
+  it('handles undefined value in base', () => {
+    const s1 = new Map([
+      ['hello', 1],
+      ['world', undefined],
+    ]);
+    const s2 = new Map([
+      ['hello', 1],
+      ['world', 2],
+    ]);
+    const s3 = new Map([
+      ['hello', 2],
+      ['world', undefined],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+    );
     expect(merger(s1, s2, s3)).toEqual(
       new Map([
         ['hello', 2],
-        ['world', undefined],
+        ['world', 2],
       ]),
     );
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
+
+  it('handles delete of undefined value', () => {
+    const s1 = new Map([
+      ['hello', 1],
+      ['world', undefined],
+    ]);
+    const s2 = new Map([['hello', 1]]);
+    const s3 = new Map([
+      ['hello', 2],
+      ['world', undefined],
+    ]);
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeMap,
+    );
+    expect(merger(s1, s2, s3)).toEqual(new Map([['hello', 2]]));
     expect(paths).toEqual([[], ['hello'], ['world']]);
   });
 });

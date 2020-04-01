@@ -10,7 +10,7 @@ export function internalTrimergeOrderedMap<K, V>(
   path: Path,
   mergeFn: MergeFn,
   allowOrderConflicts: boolean,
-  callback: (key: K, value: V | undefined) => void,
+  callback: (key: K, value: V) => void,
 ): 'left' | 'right' | undefined {
   const leftRightKeys = new Set(leftMap.keys());
   for (const key of rightMap.keys()) {
@@ -31,16 +31,10 @@ export function internalTrimergeOrderedMap<K, V>(
       [...path, key as any],
       mergeFn,
     );
-    const inLeft = leftMap.has(key);
-    const inRight = rightMap.has(key);
-    if (
-      merged !== undefined ||
-      (inLeft && left === undefined) ||
-      (inRight && right === undefined)
-    ) {
-      if (!inLeft) {
+    if (merged !== undefined) {
+      if (!leftMap.has(key)) {
         restoredInLeft.add(key);
-      } else if (!inRight) {
+      } else if (!rightMap.has(key)) {
         restoredInRight.add(key);
       }
       mergedValues.set(key, merged);
@@ -59,19 +53,21 @@ export function internalTrimergeOrderedMap<K, V>(
     right,
     (key) => {
       const merged = mergedValues.get(key);
-      if (leftSame) {
-        const left = leftIterator.next().value;
-        if (!left || key !== left[0] || merged !== left[1]) {
-          leftSame = false;
+      if (merged !== undefined) {
+        if (leftSame) {
+          const left = leftIterator.next().value;
+          if (!left || key !== left[0] || merged !== left[1]) {
+            leftSame = false;
+          }
         }
-      }
-      if (rightSame) {
-        const right = rightIterator.next().value;
-        if (!right || key !== right[0] || merged !== right[1]) {
-          rightSame = false;
+        if (rightSame) {
+          const right = rightIterator.next().value;
+          if (!right || key !== right[0] || merged !== right[1]) {
+            rightSame = false;
+          }
         }
+        callback(key, merged);
       }
-      callback(key, merged);
     },
     allowOrderConflicts,
   );

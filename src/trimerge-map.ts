@@ -64,7 +64,7 @@ export function trimergeMapCreator(allowOrderConflicts: boolean): MergeFn {
         path,
         mergeFn,
         allowOrderConflicts,
-        (key, merged) => mergedMap.set(key, merged),
+        (key: any, merged: any) => mergedMap.set(key, merged),
       )
     ) {
       case 'left':
