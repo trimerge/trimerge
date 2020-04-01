@@ -19,8 +19,8 @@ export function internalTrimergeOrderedMap<K, V>(
 
   // Merge all values first (might restore some deleted values)
   const mergedValues = new Map<K, V>();
-  const restoredInLeft = new Set<K>();
-  const restoredInRight = new Set<K>();
+  const restoreLeft = new Set<K>();
+  const restoreRight = new Set<K>();
   for (const key of leftRightKeys) {
     const left = leftMap.get(key);
     const right = rightMap.get(key);
@@ -33,16 +33,17 @@ export function internalTrimergeOrderedMap<K, V>(
     );
     if (merged !== undefined) {
       if (!leftMap.has(key)) {
-        restoredInLeft.add(key);
-      } else if (!rightMap.has(key)) {
-        restoredInRight.add(key);
+        restoreLeft.add(key);
+      }
+      if (!rightMap.has(key)) {
+        restoreRight.add(key);
       }
       mergedValues.set(key, merged);
     }
   }
   const orig = Array.from(origMap.keys());
-  const left = restoreKeys(orig, leftMap, restoredInLeft);
-  const right = restoreKeys(orig, rightMap, restoredInRight);
+  const left = restoreKeys(orig, leftMap, restoreLeft);
+  const right = restoreKeys(orig, rightMap, restoreRight);
   let leftSame = true;
   let rightSame = true;
   const leftIterator = leftMap.entries();
@@ -82,29 +83,13 @@ export function internalTrimergeOrderedMap<K, V>(
 
 type SetOrMap<T> = ReadonlySet<T> | ReadonlyMap<T, any>;
 
-/**
- * This function is used to get a version of B that has certain items restored
- * This is use by internalTrimergeOrderedMap to handle the scenario
- */
 export function restoreKeys<T>(
   aArray: readonly T[],
   bMap: SetOrMap<T>,
-  keys: SetOrMap<T>,
+  restoreKeys: SetOrMap<T>,
 ): readonly T[] {
   const bArray = Array.from(bMap.keys());
-  if (keys.size === 0) {
-    return bArray;
-  }
-  // check if B is missing any keys:
-  let keyDeleted = false;
-  for (const item of keys.keys()) {
-    if (!bMap.has(item)) {
-      keyDeleted = true;
-      break;
-    }
-  }
-  if (!keyDeleted) {
-    // B doesn't delete any of the keys
+  if (restoreKeys.size === 0) {
     return bArray;
   }
 
@@ -124,7 +109,7 @@ export function restoreKeys<T>(
     const aEnd = aStart + diff.a.length;
     for (let i = aStart; i < aEnd; i++) {
       const item = aArray[i];
-      if (keys.has(item) && !bMap.has(item)) {
+      if (restoreKeys.has(item)) {
         // Key was in A, but deleted in B
         newB.push(item);
       }
