@@ -19,8 +19,11 @@ export function internalTrimergeOrderedMap<K, V>(
 
   // Merge all values first (might restore some deleted values)
   const mergedValues = new Map<K, V>();
+
+  // Keys that have been removed from left or right but were restored by mergeFn
   const restoreLeft = new Set<K>();
   const restoreRight = new Set<K>();
+
   for (const key of leftRightKeys) {
     const left = leftMap.get(key);
     const right = rightMap.get(key);
@@ -34,20 +37,25 @@ export function internalTrimergeOrderedMap<K, V>(
     if (merged !== undefined) {
       if (!leftMap.has(key)) {
         restoreLeft.add(key);
-      }
-      if (!rightMap.has(key)) {
+      } else if (!rightMap.has(key)) {
         restoreRight.add(key);
       }
       mergedValues.set(key, merged);
     }
   }
   const orig = Array.from(origMap.keys());
-  const left = restoreKeys(orig, leftMap, restoreLeft);
-  const right = restoreKeys(orig, rightMap, restoreRight);
+  const left = restoreDeletedKeys(orig, leftMap, restoreLeft);
+  const right = restoreDeletedKeys(orig, rightMap, restoreRight);
+
+  // While merging, we want to detect if the merged result is identical to
+  // either left or right, i.e. same key/value pairs in the same order
   let leftSame = true;
   let rightSame = true;
+
+  // To track order, we need to iterate over the map
   const leftIterator = leftMap.entries();
   const rightIterator = rightMap.entries();
+
   diff3Keys(
     orig,
     left,
@@ -56,12 +64,14 @@ export function internalTrimergeOrderedMap<K, V>(
       const merged = mergedValues.get(key);
       if (merged !== undefined) {
         if (leftSame) {
+          // Check that next key and value match
           const left = leftIterator.next().value;
           if (!left || key !== left[0] || merged !== left[1]) {
             leftSame = false;
           }
         }
         if (rightSame) {
+          // Check that next key and value match
           const right = rightIterator.next().value;
           if (!right || key !== right[0] || merged !== right[1]) {
             rightSame = false;
@@ -72,10 +82,14 @@ export function internalTrimergeOrderedMap<K, V>(
     },
     allowOrderConflicts,
   );
+
+  // If everything so far is the same, we need to also check there aren't still
+  // items in left (e.g. left.size > result.size)
   if (leftSame && leftIterator.next().done) {
     return 'left';
   }
-  if (rightSame && rightIterator.next().done === true) {
+  // Ditto right
+  if (rightSame && rightIterator.next().done) {
     return 'right';
   }
   return undefined;
@@ -83,33 +97,42 @@ export function internalTrimergeOrderedMap<K, V>(
 
 type SetOrMap<T> = ReadonlySet<T> | ReadonlyMap<T, any>;
 
-export function restoreKeys<T>(
-  aArray: readonly T[],
+/**
+ * Used by internalTrimergeOrderedMap to add back keys from `a` that were
+ * removed in `b`, but need to be added back in their original location.
+ *
+ * @param a base array of items
+ * @param bMap map of items (either left or right, in trimerge terms)
+ * @param keysToRestore set of items from `a` that were removed in `bMap` and need
+ *  to be added back. this should NOT include anything from bMap
+ */
+export function restoreDeletedKeys<T>(
+  a: readonly T[],
   bMap: SetOrMap<T>,
-  restoreKeys: SetOrMap<T>,
+  keysToRestore: SetOrMap<T>,
 ): readonly T[] {
-  const bArray = Array.from(bMap.keys());
-  if (restoreKeys.size === 0) {
-    return bArray;
+  const b = Array.from(bMap.keys());
+  if (keysToRestore.size === 0) {
+    return b;
   }
 
   // Otherwise we need build a new B that inserts the missing keys as close to
   // their original locations as possible
   const newB: T[] = [];
   let bEnd = 0;
-  for (const diff of diffIndices(aArray, bArray)) {
+  for (const diff of diffIndices(a, b)) {
     const bStart = diff.b.location;
     if (bEnd < bStart) {
       // Add beginning of B (no edits)
-      newB.push(...bArray.slice(bEnd, bStart));
+      newB.push(...b.slice(bEnd, bStart));
     }
 
     // Add keys from A that were deleted in B
     const aStart = diff.a.location;
     const aEnd = aStart + diff.a.length;
     for (let i = aStart; i < aEnd; i++) {
-      const item = aArray[i];
-      if (restoreKeys.has(item)) {
+      const item = a[i];
+      if (keysToRestore.has(item)) {
         // Key was in A, but deleted in B
         newB.push(item);
       }
@@ -117,11 +140,11 @@ export function restoreKeys<T>(
 
     // Add diffed keys from B
     bEnd = bStart + diff.b.length;
-    newB.push(...bArray.slice(bStart, bEnd));
+    newB.push(...b.slice(bStart, bEnd));
   }
-  if (bEnd < bArray.length) {
+  if (bEnd < b.length) {
     // Add end of B
-    newB.push(...bArray.slice(bEnd));
+    newB.push(...b.slice(bEnd));
   }
   return newB;
 }
