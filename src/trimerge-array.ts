@@ -1,8 +1,7 @@
 import { MergeFn } from './trimerge';
 import { Path } from './path';
-import { JSONValue } from './json';
 import { CannotMerge } from './cannot-merge';
-import { diff3Keys } from './diff3-keys';
+import { internalTrimergeOrderedMap } from './trimerge-ordered-map';
 import { jsSameType } from './js-same-type';
 
 type ArrayKeyFn = (item: any, index: number, arrayPath: Path) => string;
@@ -17,73 +16,45 @@ export function trimergeArrayCreator(
     right: any[],
     path: Path,
     mergeFn: MergeFn,
-  ): JSONValue[] | typeof CannotMerge => {
+  ): any[] | typeof CannotMerge => {
     if (jsSameType(orig, left, right) !== 'array') {
       return CannotMerge;
     }
-    const origMap: Record<string, any> = {};
-    const leftMap: Record<string, any> = {};
-    const rightMap: Record<string, any> = {};
-    const origKeys = orig.map((item, index): string => {
-      const key = getArrayItemKey(item, index, path);
-      if (key in origMap) {
-        throw new Error(`Duplicate array key '${key}' at /${path}`);
-      }
-      origMap[key] = item;
-      return key;
-    });
-    const leftKeys = left.map((item, index): string => {
-      const key = getArrayItemKey(item, index, path);
-      if (key in leftMap) {
-        throw new Error(`Duplicate array key '${key}' at /${path}`);
-      }
-      leftMap[key] = item;
-      return key;
-    });
-    const rightKeys = right.map((item, index): string => {
-      const key = getArrayItemKey(item, index, path);
-      if (key in rightMap) {
-        throw new Error(`Duplicate array key '${key}' at /${path}`);
-      }
-      rightMap[key] = item;
-      return key;
-    });
 
-    const mergedArray: JSONValue[] = [];
-    let leftSame = true;
-    let rightSame = true;
-    diff3Keys(
-      origKeys,
-      leftKeys,
-      rightKeys,
-      (key) => {
-        const merged = mergeFn(
-          origMap[key],
-          leftMap[key],
-          rightMap[key],
-          [...path, key],
-          mergeFn,
-        );
-        // Compare merge result with same array index in left
-        if (leftSame && merged !== left[mergedArray.length]) {
-          leftSame = false;
+    function arrayToMap(array: any[]): Map<string, any> {
+      const map = new Map<string, any>();
+      array.forEach((item, index) => {
+        const key = getArrayItemKey(item, index, path);
+        if (map.has(key)) {
+          throw new Error(`Duplicate array key '${key}' at /${path}`);
         }
-        // Compare merge result with same array index in right
-        if (rightSame && merged !== right[mergedArray.length]) {
-          rightSame = false;
-        }
-        mergedArray.push(merged);
-      },
-      allowOrderConflicts,
-    );
+        map.set(key, item);
+      });
+      return map;
+    }
 
-    // Check if result is shallow equal to left or right
-    if (leftSame && left.length === mergedArray.length) {
-      return left;
+    const origMap = arrayToMap(orig);
+    const leftMap = arrayToMap(left);
+    const rightMap = arrayToMap(right);
+
+    const mergedArray: any[] = [];
+    switch (
+      internalTrimergeOrderedMap(
+        origMap,
+        leftMap,
+        rightMap,
+        path,
+        mergeFn,
+        allowOrderConflicts,
+        (_key, merged) => mergedArray.push(merged),
+      )
+    ) {
+      case 'left':
+        return left;
+      case 'right':
+        return right;
+      default:
+        return mergedArray;
     }
-    if (rightSame && right.length === mergedArray.length) {
-      return right;
-    }
-    return mergedArray;
   };
 }

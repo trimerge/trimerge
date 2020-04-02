@@ -1,7 +1,7 @@
 import { Path, PathKey } from './path';
 import { CannotMerge } from './cannot-merge';
 import { MergeFn } from './trimerge';
-import { diff3Keys } from './diff3-keys';
+import { internalTrimergeOrderedMap } from './trimerge-ordered-map';
 
 function* iterateKeys<K>(...maps: Map<K, any>[]): IterableIterator<K> {
   for (const map of maps) {
@@ -40,16 +40,13 @@ export function trimergeUnorderedMap(
   return newMap;
 }
 
-export function trimergeMapCreator(
-  allowOrderConflicts: boolean,
-  keepUndefinedValues: boolean = true,
-): MergeFn {
+export function trimergeMapCreator(allowOrderConflicts: boolean): MergeFn {
   return function trimergeMap(
     orig: any,
     left: any,
     right: any,
     path: Path,
-    merge: MergeFn,
+    mergeFn: MergeFn,
   ): Map<any, any> | typeof CannotMerge {
     if (
       !(orig instanceof Map) ||
@@ -59,43 +56,24 @@ export function trimergeMapCreator(
       return CannotMerge;
     }
     const mergedMap = new Map<any, any>();
-    let leftSame = true;
-    let rightSame = true;
-    diff3Keys(
-      Array.from(orig.keys()),
-      Array.from(left.keys()),
-      Array.from(right.keys()),
-      (key) => {
-        const leftElement = left.get(key);
-        const rightElement = right.get(key);
-        const merged = merge(
-          orig.get(key),
-          leftElement,
-          rightElement,
-          [...path, key],
-          merge,
-        );
-        if (merged !== leftElement) {
-          leftSame = false;
-        }
-        if (merged !== rightElement) {
-          rightSame = false;
-        }
-        if (merged !== undefined || keepUndefinedValues) {
-          mergedMap.set(key, merged);
-        }
-      },
-      allowOrderConflicts,
-    );
-
-    // Check if result is shallow equal to left or right
-    if (leftSame && left.size === mergedMap.size) {
-      return left;
+    switch (
+      internalTrimergeOrderedMap(
+        orig,
+        left,
+        right,
+        path,
+        mergeFn,
+        allowOrderConflicts,
+        (key, merged) => mergedMap.set(key, merged),
+      )
+    ) {
+      case 'left':
+        return left;
+      case 'right':
+        return right;
+      default:
+        return mergedMap;
     }
-    if (rightSame && right.size === mergedMap.size) {
-      return right;
-    }
-    return mergedMap;
   };
 }
 

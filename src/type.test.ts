@@ -29,7 +29,7 @@ describe('type', () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     expect(type(() => {})).toBe('function');
     expect(
-      type(function() {
+      type(function () {
         // empty
       }),
     ).toBe('function');

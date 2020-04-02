@@ -96,6 +96,19 @@ describe('trimergeJsObject', () => {
     //try reverse
     expect(merger(s1, s3, s2)).toBe(s2);
   });
+  it('removes and changes field', () => {
+    const s1 = { hello: 1, world: 2 };
+    const s2 = { hello: 1 };
+    const s3 = { hello: 1, world: 3 };
+    const paths: Path[] = [];
+    const merger = combineMergers(
+      mockPathTrackingMerger(paths),
+      trimergeEquality,
+      trimergeObject,
+    );
+    expect(() => merger(s1, s2, s3)).toThrowError(CannotMergeError);
+    expect(paths).toEqual([[], ['hello'], ['world']]);
+  });
   it('adds and changes field', () => {
     const s1 = { hello: 1, world: 2 };
     const s2 = { hello: 1, world: 2, there: 2 };
