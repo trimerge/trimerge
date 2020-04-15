@@ -216,17 +216,14 @@ export function diffRangesFastDiffString(a: string, b: string): Diff2Range[] {
         break;
       }
       case INSERT: {
-        const next = diffs[i + 1];
         bIndex += str.length;
-        if (next && next[0] === DELETE) {
-          aIndex += next[1].length;
-          i++;
-        }
         break;
       }
       case DELETE: {
         aIndex += str.length;
         const next = diffs[i + 1];
+        // Fast diff will return DELETE, INSERT for changes
+        // (but not INSERT, DELETE)
         if (next && next[0] === INSERT) {
           bIndex += next[1].length;
           i++;
