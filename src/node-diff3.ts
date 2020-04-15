@@ -285,7 +285,7 @@ type MinMaxRange = { min: number; max: number };
 function addToMinMax(range: MinMaxRange, value: number) {
   if (value < range.min) {
     range.min = value;
-  } else if (value + 1 > range.max) {
+  } else {
     range.max = value + 1;
   }
 }
