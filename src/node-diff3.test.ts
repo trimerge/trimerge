@@ -1,10 +1,13 @@
 import {
   diff3MergeIndices,
+  diffRangesFastDiffString,
   diffIndices,
   diffIndicesLCS,
   diffIndicesString,
+  diffRangesLCS,
   LCS,
   makeRange,
+  diffRanges,
 } from './node-diff3';
 
 describe('diff3MergeIndices', () => {
@@ -196,6 +199,155 @@ describe.each([diffIndices, diffIndicesLCS, diffIndicesString])(
     it('delete middle', () => {
       expect(diffIndices('one two three', 'one three')).toEqual([
         { a: makeRange(5, 4), b: makeRange(5, 0) },
+      ]);
+    });
+  },
+);
+
+describe.each([diffRanges, diffRangesLCS, diffRangesFastDiffString])(
+  'diff common %p',
+  (diffCommon) => {
+    function diffAndRecombine(aStr: string, bStr: string) {
+      const ranges = diffCommon(aStr, bStr);
+      let reconstructA = '';
+      let reconstructB = '';
+      for (const { a, b } of ranges) {
+        reconstructA += aStr.slice(a.min, a.max);
+        reconstructB += bStr.slice(b.min, b.max);
+      }
+      expect(reconstructA).toEqual(aStr);
+      expect(reconstructB).toEqual(bStr);
+      return ranges;
+    }
+
+    it('no change', () => {
+      expect(diffAndRecombine('hello', 'hello')).toEqual([
+        {
+          a: { min: 0, max: 5 },
+          b: { min: 0, max: 5 },
+          same: true,
+        },
+      ]);
+    });
+    it('zero to something', () => {
+      expect(diffAndRecombine('', 'hello')).toEqual([
+        {
+          a: { min: 0, max: 0 },
+          b: { min: 0, max: 5 },
+          same: false,
+        },
+      ]);
+    });
+    it('something to zero', () => {
+      expect(diffAndRecombine('hello', '')).toEqual([
+        {
+          a: { min: 0, max: 5 },
+          b: { min: 0, max: 0 },
+          same: false,
+        },
+      ]);
+    });
+    it('add in front', () => {
+      expect(diffAndRecombine('word.', 'hello. word.')).toEqual([
+        {
+          a: { min: 0, max: 0 },
+          b: { min: 0, max: 7 },
+          same: false,
+        },
+        {
+          a: { min: 0, max: 5 },
+          b: { min: 7, max: 12 },
+          same: true,
+        },
+      ]);
+    });
+    it('add in back', () => {
+      expect(diffAndRecombine('word.', 'word. bye.')).toEqual([
+        {
+          a: { min: 0, max: 5 },
+          b: { min: 0, max: 5 },
+          same: true,
+        },
+        {
+          a: { min: 5, max: 5 },
+          b: { min: 5, max: 10 },
+          same: false,
+        },
+      ]);
+    });
+    it('replace all', () => {
+      expect(diffAndRecombine('foo', 'bar')).toEqual([
+        {
+          a: { min: 0, max: 3 },
+          b: { min: 0, max: 3 },
+          same: false,
+        },
+      ]);
+    });
+    it('replace middle', () => {
+      expect(diffAndRecombine('one six three', 'one four three')).toEqual([
+        {
+          a: { min: 0, max: 4 },
+          b: { min: 0, max: 4 },
+          same: true,
+        },
+        {
+          a: { min: 4, max: 7 },
+          b: { min: 4, max: 8 },
+          same: false,
+        },
+        {
+          a: { min: 7, max: 13 },
+          b: { min: 8, max: 14 },
+          same: true,
+        },
+      ]);
+    });
+    it('delete front', () => {
+      expect(diffAndRecombine('one two three', 'two three')).toEqual([
+        {
+          a: { min: 0, max: 4 },
+          b: { min: 0, max: 0 },
+          same: false,
+        },
+        {
+          a: { min: 4, max: 13 },
+          b: { min: 0, max: 9 },
+          same: true,
+        },
+      ]);
+    });
+    it('delete back', () => {
+      expect(diffAndRecombine('one two three', 'one two')).toEqual([
+        {
+          a: { min: 0, max: 7 },
+          b: { min: 0, max: 7 },
+          same: true,
+        },
+        {
+          a: { min: 7, max: 13 },
+          b: { min: 7, max: 7 },
+          same: false,
+        },
+      ]);
+    });
+    it('delete middle', () => {
+      expect(diffAndRecombine('one two three', 'one three')).toEqual([
+        {
+          a: { min: 0, max: 5 },
+          b: { min: 0, max: 5 },
+          same: true,
+        },
+        {
+          a: { min: 5, max: 9 },
+          b: { min: 5, max: 5 },
+          same: false,
+        },
+        {
+          a: { min: 9, max: 13 },
+          b: { min: 5, max: 9 },
+          same: true,
+        },
       ]);
     });
   },
