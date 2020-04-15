@@ -66,7 +66,7 @@ export interface Candidate {
 
 function arrayLikeShallowEqual<T>(a: ArrayLike<T>, b: ArrayLike<T>) {
   if (a === b) {
-    return false;
+    return true;
   }
   const length = a.length;
   if (length !== b.length) {
@@ -306,6 +306,12 @@ export function diffRangesLCS<T>(
   a: ArrayLike<T>,
   b: ArrayLike<T>,
 ): readonly Diff2Range[] {
+  let candidate = LCS(a, b);
+  if (candidate === undefined) {
+    const range = { min: 0, max: a.length };
+    return [{ same: true, a: range, b: range }];
+  }
+
   const result: Diff2Range[] = [];
   let tailA = a.length;
   let tailB = b.length;
@@ -318,7 +324,7 @@ export function diffRangesLCS<T>(
     }
   }
 
-  for (let candidate = LCS(a, b); candidate; candidate = candidate.chain) {
+  for (; candidate; candidate = candidate.chain) {
     const { aIndex, bIndex } = candidate;
     const diffA = minMax(tailA);
     const diffB = minMax(tailB);
