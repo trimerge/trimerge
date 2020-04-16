@@ -5,7 +5,9 @@
 // - Removed unused functions
 // - Generalized for any array type
 
-import fastDiff, { DELETE, EQUAL, INSERT } from 'fast-diff';
+import fastDiff from 'fast-diff';
+
+const { DELETE, EQUAL, INSERT } = fastDiff;
 
 interface Range {
   location: number;
