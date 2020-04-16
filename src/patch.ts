@@ -23,7 +23,7 @@ export function patch(object: any, patches: PatchOperation[]): any {
     const { path } = patch;
     for (const pathKey of path) {
       if (!obj) {
-        throw new Error(`"${pathKey}" is undefined in ${path.join(', ')}`);
+        throw new Error(`"${pathKey}" is undefined in [${path.join(', ')}]`);
       }
       parent = obj;
       key = pathKey;
@@ -42,16 +42,16 @@ export function patch(object: any, patches: PatchOperation[]): any {
       case 'splice':
         const { insert, index, remove = 0 } = patch;
         if (index < 0 || index > obj.length) {
-          throw new Error(`out of range insert ${path.join(', ')}`);
+          throw new Error(`out of range index in [${path.join(', ')}]`);
         }
         const removeEnd = index + remove;
         if (removeEnd < 0 || removeEnd > obj.length) {
-          throw new Error(`out of range remove ${path.join(', ')}`);
+          throw new Error(`out of range remove in [${path.join(', ')}]`);
         }
         if (typeof obj === 'string') {
           if (insert && typeof insert !== 'string') {
             throw new Error(
-              `expected string in patch splice ${path.join(', ')}`,
+              `expected string in patch splice in [${path.join(', ')}]`,
             );
           }
           parent[key] =
@@ -60,7 +60,7 @@ export function patch(object: any, patches: PatchOperation[]): any {
           if (insert) {
             if (!Array.isArray(insert)) {
               throw new Error(
-                `expected array in patch splice ${path.join(', ')}`,
+                `expected array in patch splice in [${path.join(', ')}]`,
               );
             }
             obj.splice(index, remove, ...insert);
