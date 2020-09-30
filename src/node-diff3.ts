@@ -7,10 +7,18 @@
 
 import fastDiff from 'fast-diff';
 
+const { DELETE, EQUAL, INSERT } = fastDiff;
+
 interface Range {
   location: number;
   length: number;
 }
+
+interface Sliceable {
+  slice(begin: number, end?: number): this;
+}
+
+export type SliceableArrayLike<T> = ArrayLike<T> & Sliceable;
 
 export function makeRange(location: number, length: number): Range {
   return { location, length };
@@ -58,22 +66,29 @@ export interface Candidate {
   chain: Candidate | undefined;
 }
 
+function arrayLikeShallowEqual<T>(a: ArrayLike<T>, b: ArrayLike<T>) {
+  if (a === b) {
+    return true;
+  }
+  const length = a.length;
+  if (length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Expects two arrays
 export function LCS<T>(
   a: ArrayLike<T>,
   b: ArrayLike<T>,
 ): Candidate | undefined {
   // short circuit in case of equality to prevent time-consuming LCS call
-  if (typeof a === 'string' && typeof b === 'string') {
-    if (a === b) {
-      return undefined;
-    }
-  } else if (
-    Array.isArray(a) &&
-    Array.isArray(b) &&
-    a.length === b.length &&
-    a.every((val, i) => val === b[i])
-  ) {
+  if (arrayLikeShallowEqual(a, b)) {
     return undefined;
   }
 
@@ -162,7 +177,7 @@ export function diffIndicesString(a: string, b: string): DiffIndicesResult[] {
 
   for (const [type, str] of diffResult) {
     switch (type) {
-      case fastDiff.EQUAL: {
+      case EQUAL: {
         flush();
         aIndex += str.length;
         bIndex += str.length;
@@ -170,17 +185,62 @@ export function diffIndicesString(a: string, b: string): DiffIndicesResult[] {
         lastB = bIndex;
         break;
       }
-      case fastDiff.INSERT: {
+      case INSERT: {
         bIndex += str.length;
         break;
       }
-      case fastDiff.DELETE: {
+      case DELETE: {
         aIndex += str.length;
         break;
       }
     }
   }
   flush();
+
+  return result;
+}
+export function diffRangesFastDiffString(a: string, b: string): Diff2Range[] {
+  let aIndex = 0;
+  let bIndex = 0;
+
+  let lastA = 0;
+  let lastB = 0;
+
+  const result: Diff2Range[] = [];
+
+  const diffs = fastDiff(a, b);
+  for (let i = 0; i < diffs.length; i++) {
+    const [type, str] = diffs[i];
+    switch (type) {
+      case EQUAL: {
+        aIndex += str.length;
+        bIndex += str.length;
+        break;
+      }
+      case INSERT: {
+        bIndex += str.length;
+        break;
+      }
+      case DELETE: {
+        aIndex += str.length;
+        const next = diffs[i + 1];
+        // Fast diff will return DELETE, INSERT for changes
+        // (but not INSERT, DELETE)
+        if (next && next[0] === INSERT) {
+          bIndex += next[1].length;
+          i++;
+        }
+        break;
+      }
+    }
+    result.push({
+      same: type === EQUAL,
+      a: { min: lastA, max: aIndex },
+      b: { min: lastB, max: bIndex },
+    });
+    lastA = aIndex;
+    lastB = bIndex;
+  }
 
   return result;
 }
@@ -219,6 +279,83 @@ export function diffIndicesLCS<T>(
   return result;
 }
 
+// We apply the LCS to give a simple representation of the
+// offsets and lengths of mismatched chunks in the input
+export type Diff2Range = { same: boolean; a: MinMaxRange; b: MinMaxRange };
+type MinMaxRange = { min: number; max: number };
+
+function addToMinMax(range: MinMaxRange, value: number) {
+  if (value < range.min) {
+    range.min = value;
+  } else {
+    range.max = value + 1;
+  }
+}
+
+function minMax(value: number): MinMaxRange {
+  return { min: value, max: value };
+}
+
+function hasRange(range: MinMaxRange) {
+  return range.min < range.max;
+}
+
+// files. This is used by diff3MergeIndices below.
+export function diffRangesLCS<T>(
+  a: ArrayLike<T>,
+  b: ArrayLike<T>,
+): readonly Diff2Range[] {
+  let candidate = LCS(a, b);
+  if (candidate === undefined) {
+    const range = { min: 0, max: a.length };
+    return [{ same: true, a: range, b: range }];
+  }
+
+  const result: Diff2Range[] = [];
+  let tailA = a.length;
+  let tailB = b.length;
+  let commonA = minMax(tailA);
+  let commonB = minMax(tailB);
+
+  function processCommon() {
+    if (hasRange(commonA)) {
+      result.push({ same: true, a: commonA, b: commonB });
+    }
+  }
+
+  for (; candidate; candidate = candidate.chain) {
+    const { aIndex, bIndex } = candidate;
+    const diffA = minMax(tailA);
+    const diffB = minMax(tailB);
+
+    if (tailA > aIndex + 1) {
+      addToMinMax(diffA, aIndex + 1);
+    }
+    if (tailB > bIndex + 1) {
+      addToMinMax(diffB, bIndex + 1);
+    }
+    tailA = aIndex;
+    tailB = bIndex;
+
+    if (hasRange(diffA) || hasRange(diffB)) {
+      processCommon();
+      result.push({ same: false, a: diffA, b: diffB });
+      commonA = minMax(tailA);
+      commonB = minMax(tailB);
+    }
+
+    if (tailA >= 0) {
+      addToMinMax(commonA, tailA);
+      addToMinMax(commonB, tailB);
+    }
+  }
+
+  processCommon();
+
+  result.reverse();
+  return result;
+}
+
 export function diffIndices<T>(
   a: ArrayLike<T>,
   b: ArrayLike<T>,
@@ -227,6 +364,16 @@ export function diffIndices<T>(
     return diffIndicesString(a, b);
   }
   return diffIndicesLCS(a, b);
+}
+
+export function diffRanges<T extends any[] | string>(
+  a: T,
+  b: T,
+): readonly Diff2Range[] {
+  if (typeof a === 'string' && typeof b === 'string') {
+    return diffRangesFastDiffString(a, b);
+  }
+  return diffRangesLCS(a, b);
 }
 
 // Given three files, A, O, and B, where both A and B are
