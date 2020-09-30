@@ -10,7 +10,7 @@ export function trimergeObject(
   right: any,
   path: Path,
   mergeFn: MergeFn,
-): object | typeof CannotMerge {
+): Record<string, unknown> | typeof CannotMerge {
   if (jsSameType(orig, left, right) !== 'object') {
     return CannotMerge;
   }
