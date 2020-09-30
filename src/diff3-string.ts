@@ -28,7 +28,7 @@ export function sliceRanges<T>(
   sliceStart: number,
   sliceEnd: number,
   offset: number = 0,
-) {
+): Range<T>[] {
   const sliced: Range<T>[] = [];
   forEachSliceRanges<T>(ranges, sliceStart, sliceEnd, offset, (range) =>
     sliced.push(range),
@@ -141,6 +141,10 @@ export function diff3MergeStringRanges<T>(
   return { text: result, ranges };
 }
 
-export function diff3MergeStrings(base: string, left: string, right: string) {
+export function diff3MergeStrings(
+  base: string,
+  left: string,
+  right: string,
+): string {
   return diff3MergeStringRanges(base, left, right).text;
 }
