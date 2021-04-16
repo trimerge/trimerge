@@ -3,6 +3,7 @@ import {
   diffIndices,
   diffIndicesArray,
   diffIndicesArray2,
+  diffIndicesLCS,
   diffIndicesString,
   makeRange,
 } from './node-diff3';
@@ -159,6 +160,7 @@ describe.each([
   diffIndices,
   diffIndicesArray,
   diffIndicesArray2,
+  diffIndicesLCS,
   diffIndicesString,
 ])('string diffIndices %p', (diffIndices) => {
   it('zero to something', () => {
