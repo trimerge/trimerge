@@ -1,7 +1,7 @@
 import { Path, PathKey } from './path';
 import { CannotMerge } from './cannot-merge';
 import { MergeFn } from './trimerge';
-import { diff3Keys } from './diff3-keys';
+import { internalTrimergeOrderedMap } from './trimerge-ordered-map';
 
 function* iterateKeys<K>(...maps: Map<K, any>[]): IterableIterator<K> {
   for (const map of maps) {
@@ -40,16 +40,13 @@ export function trimergeUnorderedMap(
   return newMap;
 }
 
-export function trimergeMapCreator(
-  allowOrderConflicts: boolean,
-  keepUndefinedValues: boolean = true,
-): MergeFn {
+export function trimergeMapCreator(allowOrderConflicts: boolean): MergeFn {
   return function trimergeMap(
     orig: any,
     left: any,
     right: any,
     path: Path,
-    merge: MergeFn,
+    mergeFn: MergeFn,
   ): Map<any, any> | typeof CannotMerge {
     if (
       !(orig instanceof Map) ||
@@ -58,26 +55,25 @@ export function trimergeMapCreator(
     ) {
       return CannotMerge;
     }
-    const newMap = new Map<any, any>();
-    diff3Keys(
-      Array.from(orig.keys()),
-      Array.from(left.keys()),
-      Array.from(right.keys()),
-      (key) => {
-        const value = merge(
-          orig.get(key),
-          left.get(key),
-          right.get(key),
-          [...path, key],
-          merge,
-        );
-        if (value !== undefined || keepUndefinedValues) {
-          newMap.set(key, value);
-        }
-      },
-      allowOrderConflicts,
-    );
-    return newMap;
+    const mergedMap = new Map<any, any>();
+    switch (
+      internalTrimergeOrderedMap(
+        orig,
+        left,
+        right,
+        path,
+        mergeFn,
+        allowOrderConflicts,
+        (key, merged) => mergedMap.set(key, merged),
+      )
+    ) {
+      case 'left':
+        return left;
+      case 'right':
+        return right;
+      default:
+        return mergedMap;
+    }
   };
 }
 
