@@ -311,7 +311,7 @@ export function diffIndices<T>(
   if (typeof a === 'string' && typeof b === 'string') {
     return diffIndicesString(a, b);
   }
-  return diffIndicesArray(a as T[], b as T[]);
+  return diffIndicesArray(a, b);
 }
 
 // Given three files, A, O, and B, where both A and B are
