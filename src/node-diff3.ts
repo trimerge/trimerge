@@ -7,6 +7,8 @@
 // -
 
 import fastDiff from 'fast-diff';
+import mdiff from 'mdiff';
+import * as fmd from 'fast-myers-diff';
 
 interface Range {
   location: number;
@@ -220,6 +222,88 @@ export function diffIndicesLCS<T>(
   return result;
 }
 
+function areReferenceEqual<T>(a: T, b: T): boolean {
+  return a === b;
+}
+
+export function diffIndicesArray<T>(
+  a: ArrayLike<T>,
+  b: ArrayLike<T>,
+  areEqual: (a: T, b: T) => boolean = areReferenceEqual,
+): DiffIndicesResult[] {
+  if (a === b) {
+    return [];
+  }
+
+  const result: DiffIndicesResult[] = [];
+
+  // following the pattern of fmd.diff, compute common prefix, suffix, and equality
+  // to reduce the amount of work needed by fmd.diff_core
+
+  // eliminate common prefix
+  let offset = 0;
+  let aLength = a.length;
+  let bLength = b.length;
+  while (
+    offset < aLength &&
+    offset < bLength &&
+    areEqual(a[offset], b[offset])
+  ) {
+    offset++;
+  }
+
+  if (offset === aLength && offset === bLength) {
+    return [];
+  }
+
+  // eliminate common suffix
+  while (aLength > offset && bLength > offset) {
+    if (!areEqual(a[aLength - 1], b[bLength - 1])) {
+      break;
+    }
+    aLength--;
+    bLength--;
+  }
+
+  for (const [aStart, aEnd, bStart, bEnd] of fmd.diff_core(
+    offset,
+    aLength - offset,
+    offset,
+    bLength - offset,
+    (i, j) => areEqual(a[i], b[j]),
+  )) {
+    result.push({
+      a: makeRange(aStart, aEnd - aStart),
+      b: makeRange(bStart, bEnd - bStart),
+    });
+  }
+  return result;
+}
+
+export function diffIndicesArray2<T>(
+  a: ArrayLike<T>,
+  b: ArrayLike<T>,
+  areEqual?: (a: T, b: T) => boolean,
+): DiffIndicesResult[] {
+  if (a == b) {
+    return [];
+  }
+
+  // mdiff should ArrayLike but has the type set as `string | any[]`
+  // could use patch-package or patch upstream to fix
+  const diff = mdiff(a as T[], b as T[], {
+    equal: areEqual,
+  });
+  const result: DiffIndicesResult[] = [];
+  diff.scanDiff((aStart, aEnd, bStart, bEnd) => {
+    result.push({
+      a: makeRange(aStart, aEnd - aStart),
+      b: makeRange(bStart, bEnd - bStart),
+    });
+  });
+  return result;
+}
+
 export function diffIndices<T>(
   a: ArrayLike<T>,
   b: ArrayLike<T>,
@@ -227,7 +311,7 @@ export function diffIndices<T>(
   if (typeof a === 'string' && typeof b === 'string') {
     return diffIndicesString(a, b);
   }
-  return diffIndicesLCS(a, b);
+  return diffIndicesArray(a as T[], b as T[]);
 }
 
 // Given three files, A, O, and B, where both A and B are

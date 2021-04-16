@@ -1,5 +1,425 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`array performance [Function diffIndicesArray] is performant for large arrays with scattered changes 1`] = `
+Array [
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 10000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 10000,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 20000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 20010,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 25000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 25020,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 50000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 50030,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 75000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 75040,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 100000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 100050,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 120000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 120040,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 121000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 121030,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 150000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 150020,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 190000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 190010,
+    },
+  },
+]
+`;
+
+exports[`array performance [Function diffIndicesArray2] is performant for large arrays with scattered changes 1`] = `
+Array [
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 10000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 10000,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 20000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 20010,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 25000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 25020,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 50000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 50030,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 75000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 75040,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 100000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 100050,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 120000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 120040,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 121000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 121030,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 150000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 150020,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 190000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 190010,
+    },
+  },
+]
+`;
+
+exports[`diffIndicesArray is performant for large arrays with scattered changes 1`] = `
+Array [
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 10000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 10000,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 20000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 20010,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 25000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 25020,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 50000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 50030,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 75000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 75040,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 100000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 100050,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 120000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 120040,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 121000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 121030,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 150000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 150020,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 190000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 190010,
+    },
+  },
+]
+`;
+
+exports[`diffIndicesLCS is performant for large arrays with scattered changes 1`] = `
+Array [
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 10000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 10000,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 20000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 20010,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 25000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 25020,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 50000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 50030,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 0,
+      "location": 75000,
+    },
+    "b": Object {
+      "length": 10,
+      "location": 75040,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 100000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 100050,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 120000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 120040,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 121000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 121030,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 150000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 150020,
+    },
+  },
+  Object {
+    "a": Object {
+      "length": 10,
+      "location": 190000,
+    },
+    "b": Object {
+      "length": 0,
+      "location": 190010,
+    },
+  },
+]
+`;
+
 exports[`diffIndicesString is performant for large strings with scattered changes 1`] = `
 Array [
   Object {
