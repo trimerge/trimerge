@@ -2,10 +2,9 @@ import { restoreDeletedKeys } from './trimerge-ordered-map';
 
 describe('restoreKeys', () => {
   it('handles deletes', () => {
-    expect(restoreDeletedKeys(['x', 'y'], new Set(['x']), new Set(['y']))).toEqual([
-      'x',
-      'y',
-    ]);
+    expect(
+      restoreDeletedKeys(['x', 'y'], new Set(['x']), new Set(['y'])),
+    ).toEqual(['x', 'y']);
   });
   it('handles deletes 2', () => {
     expect(
@@ -30,7 +29,7 @@ describe('restoreKeys', () => {
   it('handles move and delete (ambiguous)', () => {
     expect(
       restoreDeletedKeys(['x', 'y', 'z'], new Set(['z', 'x']), new Set(['y'])),
-    ).toEqual(['y', 'z', 'x']);
+    ).toEqual(['z', 'x', 'y']);
   });
   it('handles add at end', () => {
     expect(

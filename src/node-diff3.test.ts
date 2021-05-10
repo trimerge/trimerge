@@ -1,11 +1,11 @@
 import {
   diff3MergeIndices,
   diffIndices,
-  diffIndicesLCS,
+  diffIndicesArray,
   diffIndicesString,
-  LCS,
   makeRange,
 } from './node-diff3';
+import { jsonEqual } from './json-equal';
 
 describe('diff3MergeIndices', () => {
   it('works with one-sided change', () => {
@@ -154,7 +154,7 @@ describe('diff3MergeIndices', () => {
   });
 });
 
-describe.each([diffIndices, diffIndicesLCS, diffIndicesString])(
+describe.each([diffIndices, diffIndicesArray, diffIndicesString])(
   'string diffIndices %p',
   (diffIndices) => {
     it('zero to something', () => {
@@ -194,9 +194,13 @@ describe.each([diffIndices, diffIndicesLCS, diffIndicesString])(
       ]);
     });
     it('delete middle', () => {
-      expect(diffIndices('one two three', 'one three')).toEqual([
-        { a: makeRange(5, 4), b: makeRange(5, 0) },
-      ]);
+      const res = diffIndices('one two three', 'one three');
+
+      expect(
+        jsonEqual(res, [{ a: makeRange(5, 4), b: makeRange(5, 0) }]) ||
+          jsonEqual(res, [{ a: makeRange(4, 4), b: makeRange(4, 0) }]) ||
+          jsonEqual(res, [{ a: makeRange(3, 4), b: makeRange(3, 0) }]),
+      ).toBe(true);
     });
   },
 );
@@ -260,36 +264,61 @@ describe('diffIndicesString', () => {
   });
 });
 
-describe('LCS', () => {
-  it('zero to something', () => {
-    expect(LCS('', 'hello')).toEqual({
-      aIndex: -1,
-      bIndex: -1,
-      chain: undefined,
-    });
+describe.each([diffIndicesArray])('array performance %p', (diffIndicesArr) => {
+  function makeArr(len: number) {
+    let a = '';
+    while (a.length < len) {
+      a +=
+        'The quick brown fox jumps over the lazy dog.' +
+        ' A man, a plan, a canal, panama.' +
+        ' She sells sea shells by the sea shore. ';
+    }
+    return a.slice(0, len).split('');
+  }
+  it('is performant for equal large array', () => {
+    const a = makeArr(200_000);
+    expect(diffIndicesArr(a, a)).toEqual([]);
   });
-  it('change in middle', () => {
-    expect(LCS('a1a', 'b1b')).toEqual({
-      aIndex: 1,
-      bIndex: 1,
-      chain: {
-        aIndex: -1,
-        bIndex: -1,
-        chain: undefined,
+  it('is performant for large arrays with head diff', () => {
+    const a = makeArr(200_000);
+    const b = [...'***', ...a];
+    expect(diffIndicesArr(a, b)).toEqual([
+      {
+        a: makeRange(0, 0),
+        b: makeRange(0, 3),
       },
-    });
+    ]);
   });
-  it('is undefined for equal string inputs', () => {
-    expect(LCS('abc123', 'abc123')).toBeUndefined();
-    expect(LCS('', '')).toBeUndefined();
+  it('is performant for large arrays with tail diff', () => {
+    const a = makeArr(200_000);
+    const b = [...a, ...'***'];
+    expect(diffIndicesArr(a, b)).toEqual([
+      {
+        a: makeRange(200_000, 0),
+        b: makeRange(200_000, 3),
+      },
+    ]);
   });
-  it('is undefined for shallow-equal array inputs', () => {
-    expect(LCS([], [])).toBeUndefined();
-    const x = { x: true };
-    const y = { y: true };
-    expect(LCS([x, y], [x, y])).toBeUndefined();
+  it('is performant for large arrays with scattered changes', () => {
+    const a = makeArr(200_000);
+    const delta = 10;
+    const addLocs = [10_000, 20_000, 25_000, 50_000, 75_000];
+    const delLocs = [100_000, 120_000, 121_000, 150_000, 190_000];
+    const b = [...a];
+    for (let i = delLocs.length - 1; i >= 0; i--) {
+      b.splice(delLocs[i], delta);
+    }
+    for (let i = addLocs.length - 1; i >= 0; i--) {
+      b.splice(addLocs[i], 0, ...'*'.repeat(delta));
+    }
+    expect(diffIndicesArr(a, b)).toMatchSnapshot();
   });
-  it('is not undefined for value-equal array inputs', () => {
-    expect(LCS([{ x: true }], [{ x: true }])).not.toBeUndefined();
+  it('is performant for large arrays with many changes', () => {
+    const a = makeArr(200_000);
+    const b = [...a];
+    for (let i = 0; i < 200_000; i += 100) {
+      b.splice(i, 1, '*');
+    }
+    expect(diffIndicesArr(a, b)).toBeDefined();
   });
 });
