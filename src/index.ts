@@ -33,7 +33,6 @@ export {
   OkIndexB,
   ConflictIndex,
   Index,
-  LCS,
   diffIndices,
   diff3MergeIndices,
 } from './node-diff3';
