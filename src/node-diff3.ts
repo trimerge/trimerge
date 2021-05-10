@@ -6,8 +6,7 @@
 // - Generalized for any array type
 
 import fastDiff from 'fast-diff';
-import mdiff from 'mdiff';
-import * as fmd from 'fast-myers-diff';
+import * as fastMyersDiff from 'fast-myers-diff';
 
 interface Range {
   location: number;
@@ -60,83 +59,6 @@ export interface Candidate {
   chain: Candidate | undefined;
 }
 
-// Expects two arrays
-export function LCS<T>(
-  a: ArrayLike<T>,
-  b: ArrayLike<T>,
-): Candidate | undefined {
-  // short circuit in case of equality to prevent time-consuming LCS call
-  if (typeof a === 'string' && typeof b === 'string') {
-    if (a === b) {
-      return undefined;
-    }
-  } else if (
-    Array.isArray(a) &&
-    Array.isArray(b) &&
-    a.length === b.length &&
-    a.every((val, i) => val === b[i])
-  ) {
-    return undefined;
-  }
-
-  const equivalenceClasses = new Map<T, number[]>();
-  for (let j = 0; j < b.length; j++) {
-    const line = b[j];
-    const equivalenceClass = equivalenceClasses.get(line);
-    if (equivalenceClass) {
-      equivalenceClass.push(j);
-    } else {
-      equivalenceClasses.set(line, [j]);
-    }
-  }
-
-  const candidates: Candidate[] = [
-    { aIndex: -1, bIndex: -1, chain: undefined },
-  ];
-
-  for (let i = 0; i < a.length; i++) {
-    const line = a[i];
-    const bIndices = equivalenceClasses.get(line) || [];
-
-    let r = 0;
-    let c = candidates[0];
-
-    for (let jX = 0; jX < bIndices.length; jX++) {
-      const j = bIndices[jX];
-
-      let s;
-      for (s = r; s < candidates.length; s++) {
-        if (
-          candidates[s].bIndex < j &&
-          (s === candidates.length - 1 || candidates[s + 1].bIndex > j)
-        ) {
-          break;
-        }
-      }
-
-      if (s < candidates.length) {
-        const newCandidate: Candidate = {
-          aIndex: i,
-          bIndex: j,
-          chain: candidates[s],
-        };
-        candidates[r] = c;
-        r = s + 1;
-        c = newCandidate;
-        if (r === candidates.length) {
-          break; // no point in examining further (j)s
-        }
-      }
-    }
-
-    candidates[r] = c;
-  }
-
-  // At this point, we know the LCS: it's in the reverse of the
-  // linked-list through .chain of candidates[candidates.length - 1].
-  return candidates[candidates.length - 1];
-}
-
 interface DiffIndicesResult {
   a: Range;
   b: Range;
@@ -187,40 +109,6 @@ export function diffIndicesString(a: string, b: string): DiffIndicesResult[] {
   return result;
 }
 
-// We apply the LCS to give a simple representation of the
-// offsets and lengths of mismatched chunks in the input
-// files. This is used by diff3MergeIndices below.
-export function diffIndicesLCS<T>(
-  a: ArrayLike<T>,
-  b: ArrayLike<T>,
-): DiffIndicesResult[] {
-  const result: DiffIndicesResult[] = [];
-
-  let tail1 = a.length;
-  let tail2 = b.length;
-
-  for (
-    let candidate: Candidate | undefined = LCS(a, b);
-    candidate !== undefined;
-    candidate = candidate.chain
-  ) {
-    const mismatchLength1 = tail1 - candidate.aIndex - 1;
-    const mismatchLength2 = tail2 - candidate.bIndex - 1;
-    tail1 = candidate.aIndex;
-    tail2 = candidate.bIndex;
-
-    if (mismatchLength1 || mismatchLength2) {
-      result.push({
-        a: makeRange(tail1 + 1, mismatchLength1),
-        b: makeRange(tail2 + 1, mismatchLength2),
-      });
-    }
-  }
-
-  result.reverse();
-  return result;
-}
-
 function areReferenceEqual<T>(a: T, b: T): boolean {
   return a === b;
 }
@@ -236,8 +124,8 @@ export function diffIndicesArray<T>(
 
   const result: DiffIndicesResult[] = [];
 
-  // following the pattern of fmd.diff, compute common prefix, suffix, and equality
-  // to reduce the amount of work needed by fmd.diff_core
+  // following the pattern of fastMyersDiff.diff, compute common prefix, suffix, and equality
+  // to reduce the amount of work needed by fastMyersDiff.diff_core
 
   // eliminate common prefix
   let offset = 0;
@@ -264,7 +152,7 @@ export function diffIndicesArray<T>(
     bLength--;
   }
 
-  for (const [aStart, aEnd, bStart, bEnd] of fmd.diff_core(
+  for (const [aStart, aEnd, bStart, bEnd] of fastMyersDiff.diff_core(
     offset,
     aLength - offset,
     offset,
@@ -276,30 +164,6 @@ export function diffIndicesArray<T>(
       b: makeRange(bStart, bEnd - bStart),
     });
   }
-  return result;
-}
-
-export function diffIndicesArray2<T>(
-  a: ArrayLike<T>,
-  b: ArrayLike<T>,
-  areEqual?: (a: T, b: T) => boolean,
-): DiffIndicesResult[] {
-  if (a == b) {
-    return [];
-  }
-
-  // mdiff should ArrayLike but has the type set as `string | any[]`
-  // could use patch-package or patch upstream to fix
-  const diff = mdiff(a as T[], b as T[], {
-    equal: areEqual,
-  });
-  const result: DiffIndicesResult[] = [];
-  diff.scanDiff((aStart, aEnd, bStart, bEnd) => {
-    result.push({
-      a: makeRange(aStart, aEnd - aStart),
-      b: makeRange(bStart, bEnd - bStart),
-    });
-  });
   return result;
 }
 

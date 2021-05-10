@@ -2,8 +2,6 @@ import {
   diff3MergeIndices,
   diffIndices,
   diffIndicesArray,
-  diffIndicesArray2,
-  diffIndicesLCS,
   diffIndicesString,
   makeRange,
 } from './node-diff3';
@@ -156,59 +154,56 @@ describe('diff3MergeIndices', () => {
   });
 });
 
-describe.each([
-  diffIndices,
-  diffIndicesArray,
-  diffIndicesArray2,
-  diffIndicesLCS,
-  diffIndicesString,
-])('string diffIndices %p', (diffIndices) => {
-  it('zero to something', () => {
-    expect(diffIndices('', 'hello')).toEqual([
-      { a: makeRange(0, 0), b: makeRange(0, 5) },
-    ]);
-  });
-  it('add in front', () => {
-    expect(diffIndices('word.', 'hello. word.')).toEqual([
-      { a: makeRange(0, 0), b: makeRange(0, 7) },
-    ]);
-  });
-  it('add in back', () => {
-    expect(diffIndices('word.', 'word. bye.')).toEqual([
-      { a: makeRange(5, 0), b: makeRange(5, 5) },
-    ]);
-  });
-  it('replace all', () => {
-    expect(diffIndices('foo', 'bar')).toEqual([
-      { a: makeRange(0, 3), b: makeRange(0, 3) },
-    ]);
-  });
-  it('replace middle', () => {
-    expect(diffIndices('one two three', 'one four three')).toEqual([
-      { a: makeRange(4, 2), b: makeRange(4, 1) },
-      { a: makeRange(7, 0), b: makeRange(6, 2) },
-    ]);
-  });
-  it('delete front', () => {
-    expect(diffIndices('one two three', 'two three')).toEqual([
-      { a: makeRange(0, 4), b: makeRange(0, 0) },
-    ]);
-  });
-  it('delete back', () => {
-    expect(diffIndices('one two three', 'one two')).toEqual([
-      { a: makeRange(7, 6), b: makeRange(7, 0) },
-    ]);
-  });
-  it('delete middle', () => {
-    const res = diffIndices('one two three', 'one three');
+describe.each([diffIndices, diffIndicesArray, diffIndicesString])(
+  'string diffIndices %p',
+  (diffIndices) => {
+    it('zero to something', () => {
+      expect(diffIndices('', 'hello')).toEqual([
+        { a: makeRange(0, 0), b: makeRange(0, 5) },
+      ]);
+    });
+    it('add in front', () => {
+      expect(diffIndices('word.', 'hello. word.')).toEqual([
+        { a: makeRange(0, 0), b: makeRange(0, 7) },
+      ]);
+    });
+    it('add in back', () => {
+      expect(diffIndices('word.', 'word. bye.')).toEqual([
+        { a: makeRange(5, 0), b: makeRange(5, 5) },
+      ]);
+    });
+    it('replace all', () => {
+      expect(diffIndices('foo', 'bar')).toEqual([
+        { a: makeRange(0, 3), b: makeRange(0, 3) },
+      ]);
+    });
+    it('replace middle', () => {
+      expect(diffIndices('one two three', 'one four three')).toEqual([
+        { a: makeRange(4, 2), b: makeRange(4, 1) },
+        { a: makeRange(7, 0), b: makeRange(6, 2) },
+      ]);
+    });
+    it('delete front', () => {
+      expect(diffIndices('one two three', 'two three')).toEqual([
+        { a: makeRange(0, 4), b: makeRange(0, 0) },
+      ]);
+    });
+    it('delete back', () => {
+      expect(diffIndices('one two three', 'one two')).toEqual([
+        { a: makeRange(7, 6), b: makeRange(7, 0) },
+      ]);
+    });
+    it('delete middle', () => {
+      const res = diffIndices('one two three', 'one three');
 
-    expect(
-      jsonEqual(res, [{ a: makeRange(5, 4), b: makeRange(5, 0) }]) ||
-        jsonEqual(res, [{ a: makeRange(4, 4), b: makeRange(4, 0) }]) ||
-        jsonEqual(res, [{ a: makeRange(3, 4), b: makeRange(3, 0) }]),
-    ).toBe(true);
-  });
-});
+      expect(
+        jsonEqual(res, [{ a: makeRange(5, 4), b: makeRange(5, 0) }]) ||
+          jsonEqual(res, [{ a: makeRange(4, 4), b: makeRange(4, 0) }]) ||
+          jsonEqual(res, [{ a: makeRange(3, 4), b: makeRange(3, 0) }]),
+      ).toBe(true);
+    });
+  },
+);
 
 describe('diffIndicesString', () => {
   function makeString(len: number) {
@@ -269,12 +264,7 @@ describe('diffIndicesString', () => {
   });
 });
 
-describe.each([
-  diffIndicesArray,
-  diffIndicesArray2,
-  // too slow, can't finish...
-  // diffIndicesLCS,
-])('array performance %p', (diffIndicesArr) => {
+describe.each([diffIndicesArray])('array performance %p', (diffIndicesArr) => {
   function makeArr(len: number) {
     let a = '';
     while (a.length < len) {
