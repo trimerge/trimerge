@@ -41,7 +41,6 @@
     "url": "https://github.com/marcello3d/trimerge/issues"
   },
   "homepage": "https://github.com/marcello3d/trimerge#readme",
-  "dependencies": {},
   "files": [
     "dist/**/*",
     "src/**/*"
